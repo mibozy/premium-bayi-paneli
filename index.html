@@ -529,7 +529,7 @@
   .sp-sum .r{display:flex;justify-content:space-between;gap:10px;} .sp-sum .tot{font-size:18px;font-weight:900;border-top:1px solid var(--line);margin-top:6px;padding-top:6px;}
   .sp-sum .genel{display:flex;align-items:center;justify-content:space-between;gap:10px;}
   .sp-sum .genel input{width:80px;margin:0;padding:6px 8px;text-align:right;}
-  .sp-tk{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px;}
+  .sp-tk{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px;}
   .sp-tk button{padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:inherit;font:inherit;cursor:pointer;text-align:center;line-height:1.25;}
   .sp-tk button b{display:block;font-size:12px;} .sp-tk button span{font-size:11.5px;font-weight:800;white-space:nowrap;}
   .sp-tk button.sel{background:#1f4fd1;border-color:#1f4fd1;color:#fff;}
@@ -4734,11 +4734,11 @@ document.getElementById('aks-more').addEventListener('click', () => { aks.lim +=
    sepet: adet, satır iskontosu (%), genel iskonto (%), vade farksız taksit, kod kopyala, sitede aç.
    Sepet satışla birlikte saklanır (kullanıcıya özel, cihazlar arası eşitlenir); "Satışı bitir" ile temizlenir.
    ============================================================ */
-const SP_KEY = 'bayi:sepet', SP_TAKSIT = [1, 2, 3, 4, 6];
+const SP_KEY = 'bayi:sepet', SP_TAKSIT = [0, 1, 2, 3, 4, 6];   // 0 = nakit
 var sp = null, spF = null, spL = {tab: 'yamaha', q: '', kat: '', lim: 60, all: null, allKey: null, rows: [], seq: 0};
 function spYukle(){ if(!sp) sp = Object.assign({yok: true, arac: null, aracOto: '', items: [], genel: 0, taksit: 1}, cjson(SP_KEY, {})); return sp; }
 function spKaydet(){ localStorage.setItem(SP_KEY, JSON.stringify({...sp, items: sp.items.map(({fy, fp, fm, _r, _u, _up, ...k}) => k)})); }
-function spSifirla(){ sp = {yok: true, arac: null, aracOto: '', items: [], genel: 0, taksit: 1}; spF = null; spKaydet(); }
+function spSifirla(){ sp = {yok: true, arac: null, aracOto: '', aracElle: false, items: [], genel: 0, taksit: 1}; spF = null; spKaydet(); }
 const spSayi = v => { const n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? Math.min(100, Math.max(0, n)) : 0; };
 const spFiyat = k => k.s === 'motoliz' ? k.fm : (k.fp != null ? k.fp : k.fy);   // Premium Shop fiyatı, yoksa Yamaha resmi
 function spHesap(){
@@ -4748,17 +4748,44 @@ function spHesap(){
   return {ara, satirIsk, genelIsk, top, eksik};
 }
 // satılan motoru Yamaha araç listesinde bul (model adı → en yeni yıl)
+// Satılan motoru Yamaha araç listesinde otomatik bul: ödeme formundaki model, sözleşmedeki (Otosoft) model ve servis mesajındaki model
+// sırayla denenir; kelime eşleşmesiyle en uygun model, yıl şasi numarasının 10. hanesinden (model yılı) ya da en yeni yıl.
+const SP_VIN_YIL = {L: 2020, M: 2021, N: 2022, P: 2023, R: 2024, S: 2025, T: 2026, V: 2027, W: 2028, X: 2029, Y: 2030};
+function spKelimeler(t){
+  return String(t || '').toLocaleUpperCase('tr').replace(/İ/g, 'I').replace(/Ç/g, 'C').replace(/Ğ/g, 'G').replace(/Ö/g, 'O').replace(/Ş/g, 'S').replace(/Ü/g, 'U').replace(/[ÉÈ]/g, 'E')
+    .replace(/TECHMAX/g, 'TECH MAX').replace(/Y-?AMT/g, ' YAMT ').replace(/\+/g, ' PLUS ').replace(/\(.*?\)/g, ' ')
+    .replace(/([A-Z])(\d)/g, '$1 $2').replace(/(\d)([A-Z])/g, '$1 $2').replace(/[^A-Z0-9]+/g, ' ')
+    .split(' ').filter(w => w && !/^(YAMAHA|YZF|ABS|MOTOSIKLET|SCOOTER|MODEL)$/.test(w)).map(w => /^\d+$/.test(w) ? String(+w) : w);
+}
+function spAracEsle(model, araclar){
+  const m = spKelimeler(model); if(!m.length) return [];
+  const ms = new Set(m);
+  let best = [], bestP = 0;
+  const gruplar = new Map(); araclar.forEach(a => { if(!gruplar.has(a.ad)) gruplar.set(a.ad, []); gruplar.get(a.ad).push(a); });
+  for(const [ad, l] of gruplar){
+    const v = spKelimeler(ad); if(!v.length || v[0] !== m[0]) continue;   // ilk kelime (XMAX, MT, TRACER…) aynı olmalı
+    const tutan = v.filter(w => ms.has(w)).length, fazla = v.length - tutan, eksik = m.filter(w => !v.includes(w)).length;
+    if(fazla) continue;                                      // araç adındaki her kelime satılan modelde olmalı
+    const puan = tutan * 10 - eksik;
+    if(puan > bestP){ bestP = puan; best = l; }
+  }
+  return best;
+}
 async function spAracBul(){
-  const model = (typeof sz !== 'undefined' && sz && sz.f && sz.f.model) || (typeof ys !== 'undefined' && ys && ys.model) || (typeof od !== 'undefined' && od && od.model) || '';
-  if(!model || sp.aracOto === model) return;
-  sp.aracOto = model;
+  if(sp.aracElle) return;   // elle seçildiyse dokunma
+  const vin = (typeof sz !== 'undefined' && sz && sz.f && szUp(sz.f.sase || '').replace(/\s/g, '')) || '';
+  const adaylar = [typeof od !== 'undefined' && od && od.model, typeof sz !== 'undefined' && sz && sz.f && sz.f.model, typeof ys !== 'undefined' && ys && ys.model].filter(Boolean);
+  const imza = adaylar.join('|') + '|' + vin;
+  if(!adaylar.length || sp.aracOto === imza) return;
   if(!aks.araclar){ try{ aks.araclar = await clRest('yamaha_arac?select=key,ad,yil,tur&order=ad.asc,yil.desc&limit=3000'); }catch(e){ return; } }
-  const n = t => String(t || '').toLocaleUpperCase('tr').replace(/YZF-?|\(.*?\)|[^A-Z0-9+]/g, '');
-  const m = n(model), yil = new Date().getFullYear() + 1;
-  let aday = aks.araclar.filter(a => n(a.ad) === m);
-  if(!aday.length) aday = aks.araclar.filter(a => m.startsWith(n(a.ad)) || n(a.ad).startsWith(m)).sort((x, y) => n(y.ad).length - n(x.ad).length);
-  aday = aday.filter(a => !a.yil || a.yil <= yil).sort((x, y) => (y.yil || 0) - (x.yil || 0));
-  if(aday.length){ sp.arac = aday[0]; spL.all = null; spKaydet(); }
+  sp.aracOto = imza;
+  const vinYil = vin.length === 17 ? SP_VIN_YIL[vin[9]] : null, ust = new Date().getFullYear() + 1;
+  for(const model of adaylar){
+    const l = spAracEsle(model, aks.araclar); if(!l.length) continue;
+    const yillar = l.filter(a => !a.yil || a.yil <= ust).sort((x, y) => (y.yil || 0) - (x.yil || 0));
+    const sec = (vinYil && (l.find(a => a.yil === vinYil) || yillar.find(a => a.yil <= vinYil))) || yillar[0] || l[0];
+    sp.arac = sec; spL.all = null; spKaydet(); return;
+  }
 }
 async function spRender(){
   spYukle();
@@ -4808,8 +4835,8 @@ function spOzetCiz(){
     ${h.genelIsk ? `<div class="r"><span>Genel iskonto</span><b>− ${aksTL(h.genelIsk)}</b></div>` : ''}
     <div class="r tot"><span>Toplam</span><span>${aksTL(h.top)}</span></div>
     ${h.eksik ? `<div class="sub" style="color:#E5484D;">${h.eksik} üründe fiyat yok; toplama katılmadı.</div>` : ''}
-    <div class="sub" style="margin-top:8px;">Vade farksız taksit</div>
-    <div class="sp-tk">${SP_TAKSIT.map(t => `<button type="button" data-t="${t}" class="${(sp.taksit || 1) === t ? 'sel' : ''}"><b>${t === 1 ? 'Tek çekim' : t + ' taksit'}</b><span>${t === 1 ? aksTL(h.top) : t + ' × ' + aksTL(Math.round(h.top / t * 100) / 100)}</span></button>`).join('')}</div>
+    <div class="sub" style="margin-top:8px;">Ödeme yöntemi (taksitler vade farksız) · WhatsApp mesajında sadece seçilen yazar</div>
+    <div class="sp-tk">${SP_TAKSIT.map(t => `<button type="button" data-t="${t}" class="${(sp.taksit ?? 1) === t ? 'sel' : ''}"><b>${t === 0 ? 'Nakit' : t === 1 ? 'Tek çekim' : t + ' taksit'}</b><span>${t <= 1 ? aksTL(h.top) : t + ' × ' + aksTL(Math.round(h.top / t * 100) / 100)}</span></button>`).join('')}</div>
   </div>`;
   const g = document.getElementById('sp-genel');
   g.oninput = () => { sp.genel = spSayi(g.value); spKaydet(); const pos = g.selectionStart; spOzetCiz(); const g2 = document.getElementById('sp-genel'); g2.focus(); try{ g2.setSelectionRange(pos, pos); }catch(e){} };
@@ -4873,16 +4900,16 @@ async function spListe(){
     }
   }catch(e){ if(seq === spL.seq){ box.innerHTML = ''; info.textContent = aksTabloYok(e) ? 'Ürün tabloları henüz kurulmadı.' : 'Ürünler alınamadı: ' + (e.message || e); } }
 }
-function spAracSec(){ aksAracSec(a => { sp.arac = a; spL.all = null; spKaydet(); spRender(); }); }
+function spAracSec(){ aksAracSec(a => { sp.arac = a; sp.aracElle = !!a; spL.all = null; spKaydet(); spRender(); }); }
 function spWaMetni(){
-  const h = spHesap(), t = sp.taksit || 1;
+  const h = spHesap(), t = sp.taksit ?? 1;
   const satir = spF.map(k => { const p = spFiyat(k), n = k.adet || 1; if(p == null) return `• ${k.ad}${n > 1 ? ' × ' + n : ''} — fiyat sorunuz`;
     const brut = p * n, net = brut * (1 - (k.isk || 0) / 100);
     return `• ${k.ad}${k.renk ? ' (' + k.renk + ')' : ''}${n > 1 ? ' × ' + n : ''} — ${k.isk ? '~' + aksTL(brut) + '~ ' : ''}${aksTL(net)}`; });
   return `*Aksesuar teklifi*${sp.arac ? '\n' + aksAracAd(sp.arac) : ''}\n\n${satir.join('\n')}\n\nAra toplam: ${aksTL(h.ara)}`
     + (h.satirIsk + h.genelIsk ? `\nİskonto: − ${aksTL(h.satirIsk + h.genelIsk)}` : '')
     + `\n*Toplam: ${aksTL(h.top)}*`
-    + (t > 1 ? `\nKredi kartına vade farksız ${t} taksit: ${t} × ${aksTL(Math.round(h.top / t * 100) / 100)}` : `\nVade farksız taksit: ${SP_TAKSIT.filter(x => x > 1).map(x => x + ' × ' + aksTL(Math.round(h.top / x * 100) / 100)).join(' · ')}`)
+    + (t === 0 ? `\nÖdeme: Nakit` : t === 1 ? `\nÖdeme: Kredi kartı tek çekim` : `\nÖdeme: Kredi kartına vade farksız ${t} taksit — ${t} × ${aksTL(Math.round(h.top / t * 100) / 100)}`)
     + `\n\nPremium Motosiklet · Yamaha`;
 }
 document.getElementById('sp-yok').addEventListener('change', e => { spYukle(); sp.yok = e.target.checked; spKaydet(); spRender(); });

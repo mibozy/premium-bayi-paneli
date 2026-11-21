@@ -516,6 +516,24 @@
   .aks-si .ft{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;}
   .aks-si .pr{text-align:right;font-weight:800;font-size:13.5px;white-space:nowrap;line-height:1.3;display:flex;flex-direction:column;gap:6px;} .aks-si .pr small{display:block;font-size:11px;font-weight:700;color:var(--steel-dim);}
   @media (max-width:420px){ .aks-si{grid-template-columns:52px 1fr;} .aks-si .im{width:52px;height:52px;} .aks-si .pr{grid-column:1 / -1;flex-direction:row;justify-content:space-between;text-align:left;padding-top:8px;border-top:1px solid var(--line);} .aks-si .pr span{flex:1;} }
+  .aks-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+  .aks-link{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:9px;border:1px solid var(--line);font-size:12px;font-weight:800;color:#1f4fd1;text-decoration:none;background:var(--card);}
+  html.dark .aks-link{color:#8fb0ff;}
+  .sp-yok{display:flex;align-items:center;gap:10px;padding:14px;margin:0 0 12px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-weight:800;font-size:15px;cursor:pointer;}
+  .sp-yok input{width:22px;height:22px;}
+  .sp-isk{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--steel-dim);white-space:nowrap;}
+  #sp-cart .aks-si .ft{flex-wrap:wrap;row-gap:8px;} #sp-cart .aks-q b{white-space:nowrap;}
+  .sp-isk input{width:64px;margin:0;padding:6px 8px;text-align:right;}
+  .sp-line{font-size:12px;color:var(--steel-dim);margin-top:2px;} .sp-line s{opacity:.7;}
+  .sp-sum{margin:10px 0;padding:12px 14px;border-radius:14px;background:var(--asphalt-2);font-size:14px;line-height:1.75;}
+  .sp-sum .r{display:flex;justify-content:space-between;gap:10px;} .sp-sum .tot{font-size:18px;font-weight:900;border-top:1px solid var(--line);margin-top:6px;padding-top:6px;}
+  .sp-sum .genel{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .sp-sum .genel input{width:80px;margin:0;padding:6px 8px;text-align:right;}
+  .sp-tk{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px;}
+  .sp-tk button{padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:inherit;font:inherit;cursor:pointer;text-align:center;line-height:1.25;}
+  .sp-tk button b{display:block;font-size:12px;} .sp-tk button span{font-size:11.5px;font-weight:800;white-space:nowrap;}
+  .sp-tk button.sel{background:#1f4fd1;border-color:#1f4fd1;color:#fff;}
+  @media (max-width:420px){ .sp-tk{grid-template-columns:repeat(3,1fr);} }
   .aks-zor{margin:10px 0;padding:10px 12px;border-radius:12px;background:rgba(229,72,77,.13);border:1px solid rgba(229,72,77,.6);color:#E5484D;font-weight:700;font-size:13px;line-height:1.45;}
   .primary-btn[disabled]{opacity:.45;cursor:not-allowed;}
   .aks-var{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;} .aks-var td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:middle;}
@@ -845,13 +863,37 @@
     </div>
   </div>
 
+  <!-- ============ YENİ SATIŞ · 4. ADIM: AKSESUAR SEPETİ ============ -->
+  <div id="sepetView" class="hidden">
+    <div class="back-row">
+      <button class="back-btn" data-nav="home">‹</button>
+      <div class="view-title">Yeni Satış</div>
+    </div>
+    <div class="sf-steps"><button type="button" data-g="1"><b>1</b>Sözleşme</button><button type="button" data-g="2"><b>2</b>Ödeme formu</button><button type="button" data-g="3"><b>3</b>Servis mesajı</button><button type="button" data-g="4"><b>4</b>Aksesuar</button></div>
+    <label class="sp-yok"><input type="checkbox" id="sp-yok" checked> <span>Müşteri aksesuar istemiyor</span></label>
+    <div id="sp-body" class="hidden">
+      <button type="button" class="aks-arac" id="sp-arac"></button>
+      <div class="section-title"><div class="stripe-dash"></div>Sepet</div>
+      <div id="sp-cart"></div>
+      <div id="sp-sum"></div>
+      <div class="sz-acts"><button type="button" class="ht-btn" id="sp-wa">WhatsApp mesajı</button><button type="button" class="ht-btn" id="sp-setkaydet">Set olarak kaydet</button><button type="button" class="ht-btn" id="sp-setten">Setten aktar</button><button type="button" class="ht-btn warn" id="sp-bosalt">Sepeti boşalt</button></div>
+      <div class="section-title" style="margin-top:18px;"><div class="stripe-dash"></div>Ürün ekle</div>
+      <div class="chips aks-tabs" id="sp-tabs"><button type="button" class="chip" data-t="yamaha">Yamaha (uyumlu)</button><button type="button" class="chip" data-t="premium">Premium Shop</button><button type="button" class="chip" data-t="motoliz">Motoliz</button></div>
+      <div class="aks-bar" id="sp-bar"><input class="field" id="sp-q" type="search" placeholder="Ürün adı veya stok kodu ara" autocomplete="off"><select class="field" id="sp-kat"></select></div>
+      <div class="sub" id="sp-info" style="margin:6px 0 10px;"></div>
+      <div id="sp-list"></div>
+      <button type="button" class="ht-btn hidden" id="sp-more" style="width:100%;">Daha fazla göster</button>
+    </div>
+    <div class="sf-nav"><button type="button" class="ht-btn" data-g="3">‹ Servis mesajı</button><button type="button" class="ht-btn" id="sf-reset">Satışı bitir · hepsini temizle</button></div>
+  </div>
+
   <!-- ============ ÖDEME DETAY FORMU ============ -->
   <div id="odemeView" class="hidden">
     <div class="back-row">
       <button class="back-btn" data-nav="home">‹</button>
       <div class="view-title">Yeni Satış</div>
     </div>
-    <div class="sf-steps"><button type="button" data-g="1"><b>1</b>Sözleşme</button><button type="button" data-g="2"><b>2</b>Ödeme formu</button><button type="button" data-g="3"><b>3</b>Servis mesajı</button></div>
+    <div class="sf-steps"><button type="button" data-g="1"><b>1</b>Sözleşme</button><button type="button" data-g="2"><b>2</b>Ödeme formu</button><button type="button" data-g="3"><b>3</b>Servis mesajı</button><button type="button" data-g="4"><b>4</b>Aksesuar</button></div>
     <div class="section">
       <div class="sz-two"><div><div class="fl">Satış temsilcisi</div><input class="field" id="od-temsilci"><div class="chips od-who" id="od-who"></div></div><div><div class="fl">Tarih</div><div class="sz-date" id="od-tarih" style="padding-top:10px;"></div></div></div>
     </div>
@@ -870,7 +912,7 @@
       <button class="back-btn" data-nav="home">‹</button>
       <div class="view-title">Yeni Satış</div>
     </div>
-    <div class="sf-steps"><button type="button" data-g="1"><b>1</b>Sözleşme</button><button type="button" data-g="2"><b>2</b>Ödeme formu</button><button type="button" data-g="3"><b>3</b>Servis mesajı</button></div>
+    <div class="sf-steps"><button type="button" data-g="1"><b>1</b>Sözleşme</button><button type="button" data-g="2"><b>2</b>Ödeme formu</button><button type="button" data-g="3"><b>3</b>Servis mesajı</button><button type="button" data-g="4"><b>4</b>Aksesuar</button></div>
     <div class="sz-sub" id="sz-sub"></div>
     <div class="section" data-st="1">
       <div class="sz-drop" id="sz-drop" tabindex="0">
@@ -934,7 +976,7 @@
       <button class="back-btn" data-nav="home">‹</button>
       <div class="view-title">Yeni Satış</div>
     </div>
-    <div class="sf-steps"><button type="button" data-g="1"><b>1</b>Sözleşme</button><button type="button" data-g="2"><b>2</b>Ödeme formu</button><button type="button" data-g="3"><b>3</b>Servis mesajı</button></div>
+    <div class="sf-steps"><button type="button" data-g="1"><b>1</b>Sözleşme</button><button type="button" data-g="2"><b>2</b>Ödeme formu</button><button type="button" data-g="3"><b>3</b>Servis mesajı</button><button type="button" data-g="4"><b>4</b>Aksesuar</button></div>
     <div class="section">
       <div class="fl">Model</div>
       <input class="field" id="ys-model" placeholder="örn. R125">
@@ -956,7 +998,7 @@
       <div class="sharebar" id="ys-share"></div>
       <div class="reset-row"><button id="ys-clear">Yeni satış için temizle</button></div>
     </div>
-    <div class="sf-nav"><button type="button" class="ht-btn" data-g="2">‹ Ödeme formu</button><button type="button" class="ht-btn" id="sf-reset">Satışı bitir · hepsini temizle</button></div>
+    <div class="sf-nav"><button type="button" class="ht-btn" data-g="2">‹ Ödeme formu</button><button type="button" class="primary-btn" data-g="4">Aksesuar ›</button></div>
     <div>
     </div>
   </div>
@@ -1076,7 +1118,7 @@
    yapılsa bile hiçbir kayıt diğerinin üzerine yazılmaz.
    ============================================================ */
 const SB_URL = 'https://rzjuaggaxsashrmnuiyw.supabase.co', SB_KEY = 'sb_publishable_0nOUb0y9Ry11Uh7RXGDfiA_RzXaqWyh';
-const SHARED_KEYS = ['bayi:kampanya', 'bayi:teknik2'], PREF_KEYS = ['bayi:anaduzen', 'bayi:mesajson', 'bayi:leadkuyruk'];
+const SHARED_KEYS = ['bayi:kampanya', 'bayi:teknik2'], PREF_KEYS = ['bayi:anaduzen', 'bayi:mesajson', 'bayi:leadkuyruk', 'bayi:sepet'];
 function clGroupOfKey(k){
   if(!k) return null;
   if(/^(r25v2|r25gd|r25sayac):\d{4}-\d{2}-\d{2}$/.test(k)) return k;
@@ -1464,7 +1506,7 @@ async function copyText(text){
 /* ============================================================
    ROUTER
    ============================================================ */
-const VIEWS = ['homeView','raporView','sayacView','satisView','maliyetView','teknikView','notlarView','kampanyaView','yenisatisView','kullaniciView','sozlesmeView','odemeView','iskontoView','kodView','testView','leadView','aksesuarView'];
+const VIEWS = ['homeView','raporView','sayacView','satisView','maliyetView','teknikView','notlarView','kampanyaView','yenisatisView','kullaniciView','sozlesmeView','odemeView','iskontoView','kodView','testView','leadView','aksesuarView','sepetView'];
 function showView(name){
   VIEWS.forEach(v => document.getElementById(v).classList.toggle('hidden', v !== name + 'View'));
   const vel = document.getElementById(name + 'View'); vel.classList.remove('view-in'); void vel.offsetWidth; vel.classList.add('view-in');
@@ -4326,14 +4368,15 @@ async function aksAktifRender(){
 async function aksSetGetir(id){ try{ const r = await clRest('urun_set?select=*&id=eq.' + id); return r[0] || null; }catch(e){ return null; } }
 
 /* ---- motor seçici (resmi sitedeki gibi: model → yıl) ---- */
-async function aksAracSec(){
+async function aksAracSec(onSec){
+  if(typeof onSec !== 'function') onSec = null;   // verilirse seçilen motor ona gider (sepet); yoksa Aksesuar ekranının motoru
   const sh = document.getElementById('sheet');
   sh.innerHTML = `<h3>Motor seç</h3>
     <div class="sz-acts" style="margin:0 0 10px;"><button type="button" class="ht-btn" id="aks-a0">✕ Filtreyi kaldır (tüm motorlar)</button><button type="button" class="ht-btn" id="aks-ax">Kapat</button></div>
     <input class="field" id="aks-aq" type="search" placeholder="Model ara (XMAX, MT-07, Ténéré…)" autocomplete="off"><div id="aks-al"><div class="sub">Yükleniyor…</div></div>`;
   document.getElementById('sheetBg').classList.add('open');
   document.getElementById('aks-ax').onclick = closeSheet;
-  document.getElementById('aks-a0').onclick = () => { lsDel('aks:arac'); aks.all = null; closeSheet(); aksHeader(); aksRender(); };
+  document.getElementById('aks-a0').onclick = () => { closeSheet(); if(onSec) return onSec(null); lsDel('aks:arac'); aks.all = null; aksHeader(); aksRender(); };
   if(!aks.araclar){
     try{ aks.araclar = await clRest('yamaha_arac?select=key,ad,yil,tur&order=ad.asc,yil.desc&limit=3000'); }
     catch(e){ document.getElementById('aks-al').innerHTML = `<div class="sub">${aksTabloYok(e) ? 'Yamaha tabloları henüz kurulmadı (supabase_yamaha_setler.sql).' : 'Motorlar alınamadı: ' + esc(e.message)}</div>`; return; }
@@ -4341,12 +4384,13 @@ async function aksAracSec(){
   const ciz = () => {
     const q = aksN(document.getElementById('aks-aq').value), g = new Map();
     aks.araclar.filter(a => !q || aksN(a.ad).includes(q)).forEach(a => { if(!g.has(a.ad)) g.set(a.ad, []); g.get(a.ad).push(a); });
-    const cur = aksArac();
+    const cur = onSec ? (sp && sp.arac) : aksArac();
     document.getElementById('aks-al').innerHTML = g.size ? [...g].map(([ad, l]) => `<div class="aks-mod">${esc(ad)} <span class="sub" style="font-weight:600;">${l[0].tur === 'scooters' ? 'Scooter' : 'Motosiklet'}</span></div><div class="aks-yr">${l.map(a => `<button type="button" class="chip ${cur && cur.key === a.key ? 'sel' : ''}" data-k="${a.key}">${a.yil || '—'}</button>`).join('')}</div>`).join('')
       : `<div class="sub">${aks.araclar.length ? 'Bulunamadı.' : 'Motor listesi henüz yüklenmedi; ilk günlük taramadan sonra gelir.'}</div>`;
     document.querySelectorAll('#aks-al [data-k]').forEach(b => b.onclick = () => {
       const a = aks.araclar.find(x => x.key === +b.dataset.k);
-      localStorage.setItem('aks:arac', JSON.stringify(a)); aks.all = null; closeSheet(); aksHeader(); aksRender();
+      closeSheet(); if(onSec) return onSec(a);
+      localStorage.setItem('aks:arac', JSON.stringify(a)); aks.all = null; aksHeader(); aksRender();
     });
   };
   document.getElementById('aks-aq').addEventListener('input', ciz); ciz();
@@ -4445,7 +4489,7 @@ function aksBagla(){
 async function aksYGetir(keys){
   keys = [...new Set(keys)].filter(Number.isFinite); if(!keys.length) return [];
   const out = [];
-  for(let i = 0; i < keys.length; i += 100) out.push(...await clRest(`yamaha_urun?select=key,ad,tur,kategori,resim,fiyat,varyant,paket,gerekli,onerilen,uyumlu,aktif,kontrol&key=in.(${keys.slice(i, i + 100).join(',')})`));
+  for(let i = 0; i < keys.length; i += 100) out.push(...await clRest(`yamaha_urun?select=key,slug,ad,tur,kategori,resim,fiyat,varyant,paket,gerekli,onerilen,uyumlu,aktif,kontrol&key=in.(${keys.slice(i, i + 100).join(',')})`));
   return out;
 }
 // gerekli parçalar zinciri (çanta → plaka → taşıyıcı); motor seçiliyse sadece uyumlular
@@ -4463,8 +4507,9 @@ async function aksGerekli(r, a){
   }
   return {list: [...bulunan.values()], eksik, yok};
 }
-async function aksYDetay(key){
-  const sh = document.getElementById('sheet'), a = aksArac();
+async function aksYDetay(key, opt){
+  opt = opt || {};   // opt.arac: başka ekranın motoru, opt.ekle: "Sete ekle" yerine (sepete ekle)
+  const sh = document.getElementById('sheet'), a = 'arac' in opt ? opt.arac : aksArac();
   sh.innerHTML = '<h3>Yükleniyor…</h3>'; document.getElementById('sheetBg').classList.add('open');
   let r; try{ [r] = await aksYGetir([key]); }catch(e){ sh.innerHTML = `<h3>Alınamadı</h3><div class="sub">${esc(e.message)}</div>`; return; }
   if(!r){ closeSheet(); return; }
@@ -4487,6 +4532,7 @@ async function aksYDetay(key){
     sh.innerHTML = `<h3>${r.paket ? '<span class="aks-tag">PAKET</span>' : ''}${esc(r.ad)}</h3>
       <div class="hint">${esc(r.tur || '')}${r.kategori ? ' · ' + esc(r.kategori) : ''}${a ? ' · ' + esc(aksAracAd(a)) : ''}</div>
       ${r.resim ? `<img src="${esc(r.resim)}" alt="" style="max-width:160px;max-height:120px;display:block;margin:8px 0;background:#fff;border-radius:10px;">` : ''}
+      ${aksYUrl(r.slug) ? `<div class="aks-links"><a class="aks-link" href="${esc(aksYUrl(r.slug))}" target="_blank" rel="noopener">↗ Yamaha sitesinde aç</a></div>` : ''}
       <table class="aks-var">${r.varyant.map(v => { const pr = aks.prem.get(v.kod); return `<tr><td><input type="radio" name="aks-v" value="${esc(v.kod)}" ${v.kod === vSec ? 'checked' : ''}></td><td>${esc(v.renk || '—')}<br><button type="button" class="aks-cp" data-k="${esc(v.kod)}">⧉ ${esc(v.kod)}</button></td><td class="r">${aksTL(v.fiyat)}<br><span class="sub">${pr ? 'Premium ' + aksTL(pr.fiyat) : "Premium'da yok"}</span></td></tr>`; }).join('')}</table>
       ${paketIc.length ? `<div class="aks-sec">Paket içeriği (${paketIc.length})</div>` + paketIc.map(x => { const v = aksVarSec(x); return `<div class="aks-it"><span></span><span>${esc(x.ad)}<br><span class="sub">${esc(v.kod)}</span></span><span class="pr">${aksTL(v.fiyat)}</span></div>`; }).join('') : ''}
       ${gerSorun === 'motor' ? `<div class="aks-zor">⛔ Bu ürün GEREKLİ parçalar olmadan monte edilemez ve gerekli parçalar motora göre değişir. <b>Önce motor seç.</b></div>`
@@ -4496,16 +4542,16 @@ async function aksYDetay(key){
       ${G.yok ? `<div class="sub" style="color:#E5484D;margin-top:4px;">${G.yok} gerekli parça Yamaha Türkiye'de satışta görünmüyor.</div>` : ''}
       ${oner.length ? `<div class="aks-sec">ÖNERİLEN</div>` + oner.map(x => it(x, secili.has(x.key))).join('') : ''}
       <div class="aks-tot">Seçilenler (${secList.length} ürün)<br>Yamaha resmi: <b>${aksTL(topY)}</b><br>Premium Shop: <b>${aksTL(topP)}</b>${eksikP ? ` <span class="sub">(${eksikP} ürün Premium'da yok)</span>` : ''}</div>
-      <div class="pv-acts">${gerSorun === 'motor' ? `<button class="primary-btn" id="aks-msec">Motor seç</button>` : `<button class="primary-btn" id="aks-ekle" ${gerSorun ? 'disabled' : ''}>Sete ekle (${secList.length}${ger.length ? ', gerekliler dahil' : ''})</button>`}${paketIc.length ? `<button class="primary-btn pv-sec" id="aks-paketset">Paketi içerikleriyle set yap</button>` : ''}</div>
+      <div class="pv-acts">${gerSorun === 'motor' ? `<button class="primary-btn" id="aks-msec">Motor seç</button>` : `<button class="primary-btn" id="aks-ekle" ${gerSorun ? 'disabled' : ''}>${opt.ekle ? 'Sepete ekle' : 'Sete ekle'} (${secList.length}${ger.length ? ', gerekliler dahil' : ''})</button>`}${paketIc.length ? `<button class="primary-btn pv-sec" id="aks-paketset">${opt.ekle ? 'Paket içeriğini sepete ekle' : 'Paketi içerikleriyle set yap'}</button>` : ''}</div>
       <div class="sz-acts" style="margin-top:8px;"><button type="button" class="ht-btn" id="aks-dx">Kapat</button></div>`;
     sh.querySelectorAll('.aks-cp[data-k]').forEach(b => b.onclick = e => { e.preventDefault(); kdCopy(b.dataset.k); });
     sh.querySelectorAll('input[name=aks-v]').forEach(i => i.onchange = async () => { vSec = i.value; await paketGetir(); ciz(); });
     sh.querySelectorAll('[data-g]').forEach(c => c.onchange = () => { c.checked ? secili.add(+c.dataset.g) : secili.delete(+c.dataset.g); ciz(); });
     document.getElementById('aks-dx').onclick = closeSheet;
-    const ms = document.getElementById('aks-msec'); if(ms) ms.onclick = aksAracSec;
-    const ek = document.getElementById('aks-ekle'); if(ek) ek.onclick = () => { if(gerSorun) return; aksSeteEkle(secList.map(x => ({s: 'yamaha', id: String(x.key), kod: x._v.kod, ad: x.ad, renk: x._v.renk || '', adet: 1, ...(x._g ? {g: [String(r.key)]} : {})})), r.ad); };
+    const ms = document.getElementById('aks-msec'); if(ms) ms.onclick = () => opt.motorSec ? opt.motorSec() : aksAracSec();
+    const ek = document.getElementById('aks-ekle'); if(ek) ek.onclick = () => { if(gerSorun) return; (opt.ekle || aksSeteEkle)(secList.map(x => ({s: 'yamaha', id: String(x.key), kod: x._v.kod, ad: x.ad, renk: x._v.renk || '', adet: 1, ...(x._g ? {g: [String(r.key)]} : {})})), r.ad); };
     const ps = document.getElementById('aks-paketset');
-    if(ps) ps.onclick = () => aksSeteEkle(paketIc.map(x => { const v = aksVarSec(x); return {s: 'yamaha', id: String(x.key), kod: v.kod, ad: x.ad, renk: v.renk || '', adet: 1}; }), r.ad, true);
+    if(ps) ps.onclick = () => (opt.ekle || aksSeteEkle)(paketIc.map(x => { const v = aksVarSec(x); return {s: 'yamaha', id: String(x.key), kod: v.kod, ad: x.ad, renk: v.renk || '', adet: 1}; }), r.ad, true);
   };
   await ciz();
 }
@@ -4566,16 +4612,19 @@ async function aksSetFiyat(kalemler){
   const m = new Map();
   for(const site of ['premium', 'motoliz']){
     const ids = kalemler.filter(k => k.s === site).map(k => k.id);
-    for(let i = 0; i < ids.length; i += 80){ const r = await clRest(`urunler?select=id,fiyat,kod,resim&site=eq.${site}&id=in.(${ids.slice(i, i + 80).map(x => '"' + String(x).replace(/"/g, '') + '"').join(',')})`); r.forEach(x => m.set(site + ':' + x.id, x)); }
+    for(let i = 0; i < ids.length; i += 80){ const r = await clRest(`urunler?select=id,fiyat,kod,resim,url&site=eq.${site}&id=in.(${ids.slice(i, i + 80).map(x => '"' + String(x).replace(/"/g, '') + '"').join(',')})`); r.forEach(x => m.set(site + ':' + x.id, x)); }
   }
   return kalemler.map(k => {
     let fy = null, fp = null, fm = null, _r = null;
-    if(k.s === 'yamaha'){ const r = y.get(k.id); const v = r && (r.varyant.find(x => x.kod === k.kod) || aksVarSec(r)); fy = v ? v.fiyat : null; fp = (aks.prem.get(k.kod) || {}).fiyat ?? null; _r = r && r.resim; }
-    else if(k.s === 'premium'){ const pr = m.get('premium:' + k.id) || {}; fp = pr.fiyat ?? null; _r = pr.resim; }
-    else{ const mr = m.get('motoliz:' + k.id) || {}; fm = mr.fiyat ?? null; _r = mr.resim; if(!k.kod && mr.kod) k = {...k, kod: mr.kod}; }   // Motoliz kodu olduğu gibi (tireler kodun parçası)
-    return {...k, fy, fp, fm, _r};
+    let _u = null, _up = null;
+    if(k.s === 'yamaha'){ const r = y.get(k.id); const v = r && (r.varyant.find(x => x.kod === k.kod) || aksVarSec(r)); fy = v ? v.fiyat : null; const pm = aks.prem.get(k.kod) || {}; fp = pm.fiyat ?? null; _r = r && r.resim; _u = aksYUrl(r && r.slug); _up = pm.url || null; }
+    else if(k.s === 'premium'){ const pr = m.get('premium:' + k.id) || {}; fp = pr.fiyat ?? null; _r = pr.resim; _u = pr.url || null; }
+    else{ const mr = m.get('motoliz:' + k.id) || {}; fm = mr.fiyat ?? null; _r = mr.resim; _u = mr.url || null; if(!k.kod && mr.kod) k = {...k, kod: mr.kod}; }   // Motoliz kodu olduğu gibi (tireler kodun parçası)
+    return {...k, fy, fp, fm, _r, _u, _up};
   });
 }
+const aksYUrl = slug => slug ? 'https://www.yamaha-motor.eu/tr/tr/accessories/accessories-overview/pdp/' + encodeURIComponent(slug) + '/' : null;
+const aksLinkler = k => (k._u ? `<a class="aks-link" href="${esc(k._u)}" target="_blank" rel="noopener">↗ ${k.s === 'yamaha' ? 'Yamaha' : AKS_SITE[k.s]}</a>` : '') + (k._up ? `<a class="aks-link" href="${esc(k._up)}" target="_blank" rel="noopener">↗ Premium</a>` : '');
 function aksToplam(f){
   const t = {y: 0, p: 0, m: 0, yE: 0, pE: 0, mVar: false};
   f.forEach(k => { const n = k.adet || 1;
@@ -4616,7 +4665,7 @@ async function aksSetAc(id){
   let f = await aksSetFiyat(st.kalemler || []);
   const yetki = aksBenim(st);
   let kayT = null;
-  const kaydet = () => { clearTimeout(kayT); kayT = setTimeout(() => clRest('urun_set?id=eq.' + st.id, {method: 'PATCH', body: {ad: st.ad, kalemler: f.map(({fy, fp, fm, _r, ...k}) => k), updated_at: new Date().toISOString()}, prefer: 'return=minimal'}).then(() => { aks.setler = null; }).catch(e => showToast('Kaydedilemedi: ' + e.message, 3500)), 400); };
+  const kaydet = () => { clearTimeout(kayT); kayT = setTimeout(() => clRest('urun_set?id=eq.' + st.id, {method: 'PATCH', body: {ad: st.ad, kalemler: f.map(({fy, fp, fm, _r, _u, _up, ...k}) => k), updated_at: new Date().toISOString()}, prefer: 'return=minimal'}).then(() => { aks.setler = null; }).catch(e => showToast('Kaydedilemedi: ' + e.message, 3500)), 400); };
   const ciz = () => {
     const t = aksToplam(f), fk = lsGet('aks:wafiyat') || 'premium';
     sh.innerHTML = `<h3>${yetki ? `<input class="field" id="aks-sad" value="${esc(st.ad)}" style="font-weight:800;margin:0;">` : esc(st.ad)}</h3>
@@ -4628,6 +4677,7 @@ async function aksSetAc(id){
           <div class="n">${esc(k.ad)}</div>
           <div class="m"><span class="aks-site ${k.s}">${AKS_SITE[k.s]}</span>${k.renk ? `<span>${esc(k.renk)}</span>` : ''}${ana.length ? `<span class="aks-tag" style="background:#E5484D;color:#fff;">GEREKLİ · ${esc(ana.map(x => x.ad).join(', '))} için</span>` : ''}</div>
           ${k.kod ? `<button type="button" class="aks-kodbtn" data-k="${esc(k.kod)}"><span>${esc(k.kod)}</span><b>⧉ Kopyala</b></button>` : '<div class="sub">Stok kodu yok</div>'}
+          ${aksLinkler(k) ? `<div class="aks-links">${aksLinkler(k)}</div>` : ''}
           <div class="ft"><span class="aks-q">${yetki ? `<button data-m="${i}" aria-label="Azalt">−</button>` : ''}<b>${k.adet || 1} adet</b>${yetki ? `<button data-p="${i}" aria-label="Artır">+</button>` : ''}</span>${yetki ? `<button type="button" class="aks-cp" data-x="${i}" style="margin:0;">Çıkar</button>` : ''}</div>
         </div>
         <div class="pr">${k.s === 'motoliz' ? `<span><small>Motoliz</small>${aksTL(k.fm)}</span>` : `<span><small>Yamaha</small>${aksTL(k.fy)}</span><span><small>Premium</small>${k.fp != null ? aksTL(k.fp) : '—'}</span>`}</div>
@@ -4677,6 +4727,196 @@ let aksQT = null;
 document.getElementById('aks-q').addEventListener('input', e => { aks.q = e.target.value; aks.lim = 60; clearTimeout(aksQT); aksQT = setTimeout(aksRender, 300); });
 document.getElementById('aks-kat').addEventListener('change', e => { aks.kat = e.target.value; aksRender(); });
 document.getElementById('aks-more').addEventListener('click', () => { aks.lim += 60; aksRender(); });
+
+/* ============================================================
+   YENİ SATIŞ · 4. ADIM: AKSESUAR SEPETİ
+   Varsayılan "Müşteri aksesuar istemiyor". Tik kalkınca satılan motora uyan aksesuarlar listelenir;
+   sepet: adet, satır iskontosu (%), genel iskonto (%), vade farksız taksit, kod kopyala, sitede aç.
+   Sepet satışla birlikte saklanır (kullanıcıya özel, cihazlar arası eşitlenir); "Satışı bitir" ile temizlenir.
+   ============================================================ */
+const SP_KEY = 'bayi:sepet', SP_TAKSIT = [1, 2, 3, 4, 6];
+var sp = null, spF = null, spL = {tab: 'yamaha', q: '', kat: '', lim: 60, all: null, allKey: null, rows: [], seq: 0};
+function spYukle(){ if(!sp) sp = Object.assign({yok: true, arac: null, aracOto: '', items: [], genel: 0, taksit: 1}, cjson(SP_KEY, {})); return sp; }
+function spKaydet(){ localStorage.setItem(SP_KEY, JSON.stringify({...sp, items: sp.items.map(({fy, fp, fm, _r, _u, _up, ...k}) => k)})); }
+function spSifirla(){ sp = {yok: true, arac: null, aracOto: '', items: [], genel: 0, taksit: 1}; spF = null; spKaydet(); }
+const spSayi = v => { const n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? Math.min(100, Math.max(0, n)) : 0; };
+const spFiyat = k => k.s === 'motoliz' ? k.fm : (k.fp != null ? k.fp : k.fy);   // Premium Shop fiyatı, yoksa Yamaha resmi
+function spHesap(){
+  let ara = 0, satirIsk = 0, eksik = 0;
+  (spF || []).forEach(k => { const p = spFiyat(k), n = k.adet || 1; if(p == null){ eksik++; return; } const brut = p * n; ara += brut; satirIsk += brut * (k.isk || 0) / 100; });
+  const net1 = ara - satirIsk, genelIsk = net1 * (sp.genel || 0) / 100, top = Math.round((net1 - genelIsk) * 100) / 100;
+  return {ara, satirIsk, genelIsk, top, eksik};
+}
+// satılan motoru Yamaha araç listesinde bul (model adı → en yeni yıl)
+async function spAracBul(){
+  const model = (typeof sz !== 'undefined' && sz && sz.f && sz.f.model) || (typeof ys !== 'undefined' && ys && ys.model) || (typeof od !== 'undefined' && od && od.model) || '';
+  if(!model || sp.aracOto === model) return;
+  sp.aracOto = model;
+  if(!aks.araclar){ try{ aks.araclar = await clRest('yamaha_arac?select=key,ad,yil,tur&order=ad.asc,yil.desc&limit=3000'); }catch(e){ return; } }
+  const n = t => String(t || '').toLocaleUpperCase('tr').replace(/YZF-?|\(.*?\)|[^A-Z0-9+]/g, '');
+  const m = n(model), yil = new Date().getFullYear() + 1;
+  let aday = aks.araclar.filter(a => n(a.ad) === m);
+  if(!aday.length) aday = aks.araclar.filter(a => m.startsWith(n(a.ad)) || n(a.ad).startsWith(m)).sort((x, y) => n(y.ad).length - n(x.ad).length);
+  aday = aday.filter(a => !a.yil || a.yil <= yil).sort((x, y) => (y.yil || 0) - (x.yil || 0));
+  if(aday.length){ sp.arac = aday[0]; spL.all = null; spKaydet(); }
+}
+async function spRender(){
+  spYukle();
+  document.getElementById('sp-yok').checked = !!sp.yok;
+  document.getElementById('sp-body').classList.toggle('hidden', !!sp.yok);
+  if(sp.yok) return;
+  await spAracBul();
+  const a = sp.arac;
+  document.getElementById('sp-arac').innerHTML = `<span><small>Müşterinin motoru</small>${a ? esc(aksAracAd(a)) : 'Seçilmedi'}</span><span class="go">${a ? 'Değiştir' : 'Motor seç'} ›</span>`;
+  document.getElementById('sp-tabs').querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c.dataset.t === spL.tab));
+  document.getElementById('sp-kat').classList.toggle('hidden', spL.tab !== 'yamaha');
+  document.getElementById('sp-bar').classList.toggle('tek', spL.tab !== 'yamaha');
+  if(!spF || spF.length !== sp.items.length){ try{ spF = await aksSetFiyat(sp.items); }catch(e){ spF = sp.items.map(k => ({...k})); } }
+  spSepetCiz(); spListe();
+}
+function spSepetCiz(){
+  const box = document.getElementById('sp-cart');
+  if(!spF.length){ box.innerHTML = '<div class="empty-state">Sepet boş. Aşağıdan ürün ekle ya da "Setten aktar"ı kullan.</div>'; document.getElementById('sp-sum').innerHTML = ''; return; }
+  box.innerHTML = spF.map((k, i) => { const ana = aksGerekliIcin(spF, k), p = spFiyat(k), n = k.adet || 1, net = p == null ? null : p * n * (1 - (k.isk || 0) / 100);
+    return `<div class="aks-si">
+      <div class="im">${k._r ? `<img loading="lazy" src="${esc(k._r)}" alt="" onerror="this.parentNode.textContent='—'">` : '—'}</div>
+      <div class="bd">
+        <div class="n">${esc(k.ad)}</div>
+        <div class="m"><span class="aks-site ${k.s}">${AKS_SITE[k.s]}</span>${k.renk ? `<span>${esc(k.renk)}</span>` : ''}${ana.length ? `<span class="aks-tag" style="background:#E5484D;color:#fff;">GEREKLİ · ${esc(ana.map(x => x.ad).join(', '))} için</span>` : ''}</div>
+        ${k.kod ? `<button type="button" class="aks-kodbtn" data-k="${esc(k.kod)}"><span>${esc(k.kod)}</span><b>⧉ Kopyala</b></button>` : '<div class="sub">Stok kodu yok</div>'}
+        ${aksLinkler(k) ? `<div class="aks-links">${aksLinkler(k)}</div>` : ''}
+        <div class="ft"><span class="aks-q"><button data-m="${i}" aria-label="Azalt">−</button><b>${n} adet</b><button data-p="${i}" aria-label="Artır">+</button></span>
+          <label class="sp-isk">İskonto % <input class="field" inputmode="decimal" data-i="${i}" value="${k.isk || ''}" placeholder="0"></label>
+          <button type="button" class="aks-cp" data-x="${i}" style="margin:0;">Çıkar</button></div>
+      </div>
+      <div class="pr"><span><small>${k.s === 'motoliz' ? 'Motoliz' : k.fp != null ? 'Premium' : 'Yamaha'} · birim</small>${aksTL(p)}</span>${k.s === 'yamaha' && k.fp != null ? `<span><small>Yamaha resmi</small>${aksTL(k.fy)}</span>` : ''}<span><small>Tutar</small><b data-net="${i}">${aksTL(net)}</b></span></div>
+    </div>`; }).join('');
+  box.querySelectorAll('.aks-kodbtn').forEach(b => b.onclick = () => { kdCopy(b.dataset.k); b.classList.add('ok'); setTimeout(() => b.classList.remove('ok'), 1200); });
+  box.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { const k = spF[+b.dataset.m]; if((k.adet || 1) > 1){ k.adet--; sp.items[+b.dataset.m].adet = k.adet; spKaydet(); spSepetCiz(); } });
+  box.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { const k = spF[+b.dataset.p]; k.adet = (k.adet || 1) + 1; sp.items[+b.dataset.p].adet = k.adet; spKaydet(); spSepetCiz(); });
+  box.querySelectorAll('input[data-i]').forEach(inp => inp.oninput = () => { const i = +inp.dataset.i, v = spSayi(inp.value); spF[i].isk = v; sp.items[i].isk = v; spKaydet();
+    const k = spF[i], p = spFiyat(k); document.querySelector(`#sp-cart [data-net="${i}"]`).textContent = aksTL(p == null ? null : p * (k.adet || 1) * (1 - v / 100)); spOzetCiz(); });
+  box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => spCikar(+b.dataset.x));
+  spOzetCiz();
+}
+function spOzetCiz(){
+  const h = spHesap(), el = document.getElementById('sp-sum');
+  el.innerHTML = `<div class="sp-sum">
+    <div class="r"><span>Ara toplam</span><b>${aksTL(h.ara)}</b></div>
+    ${h.satirIsk ? `<div class="r"><span>Ürün iskontoları</span><b>− ${aksTL(h.satirIsk)}</b></div>` : ''}
+    <div class="genel"><span>Genel iskonto %</span><input class="field" id="sp-genel" inputmode="decimal" value="${sp.genel || ''}" placeholder="0"></div>
+    ${h.genelIsk ? `<div class="r"><span>Genel iskonto</span><b>− ${aksTL(h.genelIsk)}</b></div>` : ''}
+    <div class="r tot"><span>Toplam</span><span>${aksTL(h.top)}</span></div>
+    ${h.eksik ? `<div class="sub" style="color:#E5484D;">${h.eksik} üründe fiyat yok; toplama katılmadı.</div>` : ''}
+    <div class="sub" style="margin-top:8px;">Vade farksız taksit</div>
+    <div class="sp-tk">${SP_TAKSIT.map(t => `<button type="button" data-t="${t}" class="${(sp.taksit || 1) === t ? 'sel' : ''}"><b>${t === 1 ? 'Tek çekim' : t + ' taksit'}</b><span>${t === 1 ? aksTL(h.top) : t + ' × ' + aksTL(Math.round(h.top / t * 100) / 100)}</span></button>`).join('')}</div>
+  </div>`;
+  const g = document.getElementById('sp-genel');
+  g.oninput = () => { sp.genel = spSayi(g.value); spKaydet(); const pos = g.selectionStart; spOzetCiz(); const g2 = document.getElementById('sp-genel'); g2.focus(); try{ g2.setSelectionRange(pos, pos); }catch(e){} };
+  el.querySelectorAll('.sp-tk button').forEach(b => b.onclick = () => { sp.taksit = +b.dataset.t; spKaydet(); spOzetCiz(); });
+}
+async function spEkle(kalemler){
+  spYukle();
+  kalemler.forEach(k => { const v = sp.items.find(x => x.s === k.s && x.id === k.id && x.kod === k.kod);
+    if(v){ if(k.g){ v.g = [...new Set((v.g || []).concat(k.g))]; } else v.adet = (v.adet || 1) + (k.adet || 1); }
+    else sp.items.push({...k, isk: 0}); });
+  spKaydet(); spF = null; closeSheet(); showToast(`Sepete eklendi (${kalemler.length} ürün)`, 1800);
+  await spRender();
+}
+function spCikar(i){
+  const k = spF[i], ana = aksGerekliIcin(spF, k);
+  if(ana.length){ showToast(`Bu parça "${ana[0].ad}" için GEREKLİ; montaj için şart. Önce onu çıkar.`, 3800); return; }
+  spF.splice(i, 1); sp.items.splice(i, 1);
+  let n = 0;
+  if(k.s === 'yamaha') for(let j = spF.length - 1; j >= 0; j--){ const x = spF[j]; if(!x.g || !x.g.includes(k.id)) continue; x.g = x.g.filter(g => g !== k.id); sp.items[j].g = x.g;
+    if(x.g.length && aksGerekliIcin(spF, x).length) continue; spF.splice(j, 1); sp.items.splice(j, 1); n++; }
+  if(n) showToast(`Gerekli ${n} parçası da çıkarıldı`, 2400);
+  spKaydet(); spSepetCiz();
+}
+/* ürün ekleme listesi */
+async function spListe(){
+  const seq = ++spL.seq, box = document.getElementById('sp-list'), info = document.getElementById('sp-info'), more = document.getElementById('sp-more'), a = sp.arac;
+  more.classList.add('hidden');
+  try{
+    if(spL.tab === 'yamaha'){
+      if(!a){ box.innerHTML = ''; info.textContent = 'Uyumlu Yamaha aksesuarlarını görmek için müşterinin motorunu seç.'; return; }
+      if(spL.allKey !== a.key || !spL.all){ spL.all = await clRest(`yamaha_urun?select=${aksYSel}&aktif=is.true&kontrol=not.is.null&uyumlu=cs.{${a.key}}&order=ad.asc&limit=3000`); spL.allKey = a.key; }
+      if(seq !== spL.seq) return;
+      const kats = [...new Set(spL.all.map(r => r.kategori || 'Diğer'))].sort((x, y) => x.localeCompare(y, 'tr'));
+      document.getElementById('sp-kat').innerHTML = `<option value="">Tüm kategoriler</option><option value="__paket" ${spL.kat === '__paket' ? 'selected' : ''}>Hazır paketler</option>` + kats.map(k => `<option ${spL.kat === k ? 'selected' : ''}>${esc(k)}</option>`).join('');
+      const w = aksN(spL.q).split(' ').filter(Boolean);
+      const rows = spL.all.filter(r => (!spL.kat || (spL.kat === '__paket' ? r.paket : (r.kategori || 'Diğer') === spL.kat)) && (!w.length || (t => w.every(x => t.includes(x)))(aksN(r.ad + ' ' + (r.tur || '') + ' ' + r.varyant.map(v => v.kod).join(' ')))))
+        .sort((x, y) => (aksVarSec(x).fiyat ?? 1e12) - (aksVarSec(y).fiyat ?? 1e12));   // fiyat fiyat: ucuzdan pahalıya
+      const g = rows.slice(0, spL.lim);
+      await aksPremYukle(g.flatMap(r => r.varyant.map(v => v.kod)));
+      if(seq !== spL.seq) return;
+      info.textContent = `${rows.length} uyumlu ürün · ${aksAracAd(a)} · fiyata göre sıralı`;
+      box.innerHTML = g.map(r => { const v = aksVarSec(r), pr = aks.prem.get(v.kod);
+        return `<div class="aks-row" data-y="${r.key}">${r.resim ? `<img loading="lazy" src="${esc(r.resim)}" alt="" onerror="this.style.visibility='hidden'">` : ''}<div class="t"><div class="n">${r.paket ? '<span class="aks-tag">PAKET</span>' : ''}${esc(r.ad)}</div>
+          <div class="s">${esc(r.tur || '')}${r.gerekli.length ? ' · <b style="color:#E5484D;">GEREKLİ parça şart</b>' : ''}</div></div>
+          <div class="p">${pr ? aksTL(pr.fiyat) + '<small>Premium</small>' : ''}${aksTL(v.fiyat)}<small>Yamaha</small><button type="button" class="aks-cp" style="margin-top:4px;">+ Sepete</button></div></div>`; }).join('') || '<div class="empty-state">Ürün bulunamadı.</div>';
+      more.classList.toggle('hidden', rows.length <= spL.lim);
+      box.querySelectorAll('.aks-row[data-y]').forEach(row => row.onclick = () => aksYDetay(+row.dataset.y, {arac: a, ekle: spEkle, motorSec: spAracSec}));
+    }else{
+      const site = spL.tab, mw = a ? (a.tur === 'scooters' || !/\d/.test(aksN(a.ad).split(' ')[1] || '') ? [aksN(a.ad).split(' ')[0]] : aksN(a.ad).split(' ').slice(0, 2)) : [];
+      const w = aksN(spL.q).split(' ').filter(Boolean), words = w.length ? w : mw;
+      let u = `urunler?select=site,id,ad,url,kategori,fiyat,eski_fiyat,resim,kod,indirim&aktif=is.true&site=eq.${site}`;
+      if(words.length) u += `&and=(${words.map(x => `ara.ilike.*${encodeURIComponent(x)}*`).join(',')})`;
+      const rows = await clRest(u + `&order=fiyat.asc.nullslast&limit=${spL.lim + 1}`);
+      if(seq !== spL.seq) return;
+      spL.rows = rows.slice(0, spL.lim);
+      info.textContent = `${rows.length > spL.lim ? spL.lim + '+' : rows.length} ürün${!w.length && mw.length ? ' · adında "' + mw.join(' ').toUpperCase() + '" geçenler' : ''} · fiyata göre sıralı`;
+      box.innerHTML = spL.rows.map(x => `<div class="aks-row" data-m="${esc(x.id)}">${x.resim ? `<img loading="lazy" src="${esc(x.resim)}" alt="" onerror="this.style.visibility='hidden'">` : ''}<div class="t"><div class="n">${esc(x.ad)}</div><div class="s">${esc(x.kategori || '')}${x.kod ? ' · ' + esc(x.kod) : ''}</div></div>
+        <div class="p">${x.eski_fiyat > x.fiyat ? `<small><s>${aksTL(x.eski_fiyat)}</s></small>` : ''}${aksTL(x.fiyat)}<button type="button" class="aks-cp" style="margin-top:4px;">+ Sepete</button></div></div>`).join('') || '<div class="empty-state">Ürün bulunamadı.</div>';
+      more.classList.toggle('hidden', rows.length <= spL.lim);
+      box.querySelectorAll('.aks-row[data-m]').forEach(row => row.onclick = () => { const x = spL.rows.find(r => r.id === row.dataset.m); if(x) spEkle([{s: x.site, id: String(x.id), kod: x.kod || '', ad: x.ad, adet: 1}]); });
+    }
+  }catch(e){ if(seq === spL.seq){ box.innerHTML = ''; info.textContent = aksTabloYok(e) ? 'Ürün tabloları henüz kurulmadı.' : 'Ürünler alınamadı: ' + (e.message || e); } }
+}
+function spAracSec(){ aksAracSec(a => { sp.arac = a; spL.all = null; spKaydet(); spRender(); }); }
+function spWaMetni(){
+  const h = spHesap(), t = sp.taksit || 1;
+  const satir = spF.map(k => { const p = spFiyat(k), n = k.adet || 1; if(p == null) return `• ${k.ad}${n > 1 ? ' × ' + n : ''} — fiyat sorunuz`;
+    const brut = p * n, net = brut * (1 - (k.isk || 0) / 100);
+    return `• ${k.ad}${k.renk ? ' (' + k.renk + ')' : ''}${n > 1 ? ' × ' + n : ''} — ${k.isk ? '~' + aksTL(brut) + '~ ' : ''}${aksTL(net)}`; });
+  return `*Aksesuar teklifi*${sp.arac ? '\n' + aksAracAd(sp.arac) : ''}\n\n${satir.join('\n')}\n\nAra toplam: ${aksTL(h.ara)}`
+    + (h.satirIsk + h.genelIsk ? `\nİskonto: − ${aksTL(h.satirIsk + h.genelIsk)}` : '')
+    + `\n*Toplam: ${aksTL(h.top)}*`
+    + (t > 1 ? `\nKredi kartına vade farksız ${t} taksit: ${t} × ${aksTL(Math.round(h.top / t * 100) / 100)}` : `\nVade farksız taksit: ${SP_TAKSIT.filter(x => x > 1).map(x => x + ' × ' + aksTL(Math.round(h.top / x * 100) / 100)).join(' · ')}`)
+    + `\n\nPremium Motosiklet · Yamaha`;
+}
+document.getElementById('sp-yok').addEventListener('change', e => { spYukle(); sp.yok = e.target.checked; spKaydet(); spRender(); });
+document.getElementById('sp-arac').addEventListener('click', spAracSec);
+document.getElementById('sp-tabs').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { spL.tab = c.dataset.t; spL.lim = 60; spL.kat = ''; spRender(); }));
+let spQT = null;
+document.getElementById('sp-q').addEventListener('input', e => { spL.q = e.target.value; spL.lim = 60; clearTimeout(spQT); spQT = setTimeout(spListe, 300); });
+document.getElementById('sp-kat').addEventListener('change', e => { spL.kat = e.target.value; spListe(); });
+document.getElementById('sp-more').addEventListener('click', () => { spL.lim += 60; spListe(); });
+document.getElementById('sp-wa').addEventListener('click', () => { if(!spF || !spF.length){ showToast('Sepet boş', 1600); return; } kdCopy(spWaMetni()); });
+document.getElementById('sp-bosalt').addEventListener('click', e => arm(e.currentTarget, () => { sp.items = []; sp.genel = 0; sp.taksit = 1; spF = []; spKaydet(); spSepetCiz(); }, 'Sepet boşaltılsın mı? Tekrar dokun'));
+document.getElementById('sp-setkaydet').addEventListener('click', () => {
+  if(!sp.items.length){ showToast('Sepet boş', 1600); return; }
+  const sh = document.getElementById('sheet'), a = sp.arac;
+  sh.innerHTML = `<h3>Sepeti set olarak kaydet</h3><div class="hint">${sp.items.length} ürün · iskontolar sete yazılmaz</div><div class="fl">Set adı</div><input class="field" id="sp-sad" value="${esc((a ? a.ad + ' ' : '') + 'aksesuar seti')}">
+    <button class="primary-btn" id="sp-sok">Kaydet</button><button type="button" class="ht-btn" id="sp-sx" style="width:100%;margin-top:8px;">Vazgeç</button>`;
+  document.getElementById('sheetBg').classList.add('open');
+  document.getElementById('sp-sx').onclick = closeSheet;
+  document.getElementById('sp-sok').onclick = async () => {
+    const ad = document.getElementById('sp-sad').value.trim(); if(!ad){ showToast('Set adı yaz', 1600); return; }
+    try{ await clRest('urun_set', {method: 'POST', body: {ad, arac: a ? aksAracAd(a) : null, arac_key: a ? a.key : null, kalemler: sp.items.map(({isk, fy, fp, fm, _r, _u, _up, ...k}) => k), olusturan_ad: clName()}, prefer: 'return=minimal'}); aks.setler = null; closeSheet(); showToast('Set kaydedildi: ' + ad, 2200); }
+    catch(er){ showToast('Kaydedilemedi: ' + er.message, 3500); }
+  };
+});
+document.getElementById('sp-setten').addEventListener('click', async () => {
+  const sh = document.getElementById('sheet'), a = sp.arac;
+  sh.innerHTML = '<h3>Setten aktar</h3><div class="sub">Yükleniyor…</div>'; document.getElementById('sheetBg').classList.add('open');
+  let list; try{ list = await aksSetlerYukle(); }catch(e){ sh.innerHTML = `<h3>Setler alınamadı</h3><div class="sub">${esc(e.message)}</div>`; return; }
+  const once = a ? list.filter(x => x.arac_key === a.key) : [], diger = list.filter(x => !once.includes(x));
+  const satir = x => `<div class="aks-row" data-s="${x.id}"><div class="t"><div class="n">${esc(x.ad)}</div><div class="s">${esc(x.arac || 'Motor yok')} · ${(x.kalemler || []).length} ürün</div></div><div class="p">Aktar ›</div></div>`;
+  sh.innerHTML = `<h3>Setten aktar</h3>${once.length ? `<div class="aks-sec">${esc(a.ad)} setleri</div>` + once.map(satir).join('') : ''}${diger.length ? `<div class="aks-sec">Diğer setler</div>` + diger.map(satir).join('') : ''}${list.length ? '' : '<div class="empty-state">Henüz set yok.</div>'}<button type="button" class="ht-btn" id="sp-tx" style="width:100%;margin-top:8px;">Kapat</button>`;
+  document.getElementById('sp-tx').onclick = closeSheet;
+  sh.querySelectorAll('.aks-row[data-s]').forEach(r => r.onclick = () => { const st = list.find(x => x.id === r.dataset.s); spEkle((st.kalemler || []).map(k => ({...k}))); });
+});
 function sfToOd(){
   if(!sz) return;
   odEnsure(); if(!od.musteri) od.musteri = szUp(sz.f.ad);
@@ -4717,6 +4957,7 @@ szEl('next').addEventListener('click', () => {
 function sfGo(n){
   if(n === 1){ showView('sozlesme'); szRender(); if(!sz) setTimeout(() => { try{ szEl('drop').focus({preventScroll: true}); }catch(e){} }, 50); }
   else if(n === 2){ sfToOd(); showView('odeme'); odRender(); }
+  else if(n === 4){ showView('sepet'); spRender(); }
   else { if(sz){ ysLoad(); if(ys.sasi !== szUp(sz.f.sase).slice(-4)) sfToYs(); } showView('yenisatis'); ysRender(); }
   sfStepNo = n;
   document.querySelectorAll('.sf-steps').forEach(b => b.querySelectorAll('button').forEach(x => { const g = +x.dataset.g; x.classList.toggle('on', g === n); x.classList.toggle('done', g < n); }));
@@ -4725,6 +4966,7 @@ document.querySelectorAll('.sf-steps button, .sf-nav [data-g]').forEach(b => b.a
 document.getElementById('sf-reset').addEventListener('click', e => arm(e.currentTarget, () => {
   sz = null; szEl('sasePaste').value = ''; od = null; try{ odEnsure(); }catch(_){}
   ysLoad(); Object.assign(ys, {model: '', sasi: '', renk: '', aks: '', tes: '', pdi: false, _kod: '', _rk: ''}); ysSave();
+  spSifirla();
   sfGo(1); showToast('Yeni satışa hazır', 2000);
 }, 'Hepsi temizlensin mi? Tekrar dokun'));
 
@@ -5099,6 +5341,7 @@ function clTryRender(){
     else if(v === 'teknik' && has('bayi:teknik2')) tkRender();
     else if(v === 'odeme' && (has('cfg:') || gs.includes('*')) && typeof od !== 'undefined' && od) odRender();
     else if(v === 'lead' && has('pref:bayi:leadkuyruk')) ldQRender();
+    else if(v === 'sepet' && has('pref:bayi:sepet')) spRender();
     if(has('pref:bayi:anaduzen')) renderSide();
   }catch(e){ console.error(e); }
 }

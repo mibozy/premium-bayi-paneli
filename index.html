@@ -534,6 +534,7 @@
   .sp-tk button b{display:block;font-size:12px;} .sp-tk button span{font-size:11.5px;font-weight:800;white-space:nowrap;}
   .sp-tk button.sel{background:#1f4fd1;border-color:#1f4fd1;color:#fff;}
   @media (max-width:420px){ .sp-tk{grid-template-columns:repeat(3,1fr);} }
+  .aks-vsel{margin:4px 0 2px;padding:7px 9px;font-size:12.5px;max-width:100%;}
   .aks-zor{margin:10px 0;padding:10px 12px;border-radius:12px;background:rgba(229,72,77,.13);border:1px solid rgba(229,72,77,.6);color:#E5484D;font-weight:700;font-size:13px;line-height:1.45;}
   .primary-btn[disabled]{opacity:.45;cursor:not-allowed;}
   .aks-var{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;} .aks-var td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:middle;}
@@ -4448,6 +4449,11 @@ async function aksYukleniyor(ekle){
   }catch(e){}
 }
 const aksVarSec = r => r.varyant.find(v => v.fiyat != null) || r.varyant[0] || {kod: '', fiyat: r.fiyat};
+// motorun rengine uyan varyant (ör. motor "ICON BLUE" → kapak "Icon Blue")
+function aksRenkSec(varyant, renk){
+  const m = aksN(renk); if(!m || !varyant || varyant.length < 2) return null;
+  return varyant.find(v => { const r = aksN(v.renk); return r && (` ${m} `.includes(` ${r} `) || ` ${r} `.includes(` ${m} `)); }) || null;
+}
 // Yamaha kodlarının Premium Shop fiyatları
 async function aksPremYukle(kodlar){
   const ist = [...new Set(kodlar.filter(k => k && !aks.prem.has(k)))];
@@ -4513,7 +4519,8 @@ async function aksYDetay(key, opt){
   sh.innerHTML = '<h3>Yükleniyor…</h3>'; document.getElementById('sheetBg').classList.add('open');
   let r; try{ [r] = await aksYGetir([key]); }catch(e){ sh.innerHTML = `<h3>Alınamadı</h3><div class="sub">${esc(e.message)}</div>`; return; }
   if(!r){ closeSheet(); return; }
-  let vSec = aksVarSec(r).kod;
+  const varSec = new Map(), vOf = x => (x.varyant || []).find(v => v.kod === varSec.get(x.key)) || aksRenkSec(x.varyant, opt.renk) || aksVarSec(x);
+  let vSec = vOf(r).kod;
   const [G, oner] = await Promise.all([aksGerekli(r, a), aksYGetir(r.onerilen || []).then(l => l.filter(x => x.aktif !== false && (!a || (x.uyumlu || []).includes(a.key))))]);
   let paketIc = [];
   const paketGetir = async () => { const v = r.varyant.find(x => x.kod === vSec) || {}; paketIc = (v.paket && v.paket.length) ? await aksYGetir(v.paket) : []; };
@@ -4521,19 +4528,21 @@ async function aksYDetay(key, opt){
   const ger = G.list, secili = new Set();   // GEREKLİ parçalar her zaman dahil (seçimden çıkarılamaz)
   const gerSorun = r.gerekli.length && !a ? 'motor' : G.eksik ? 'eksik' : '';
   const ciz = async () => {
-    await aksPremYukle([...r.varyant.map(v => v.kod), ...ger.concat(oner, paketIc).map(x => aksVarSec(x).kod)]);
-    const it = (x, chk) => { const v = aksVarSec(x), pr = aks.prem.get(v.kod);
-      return `<label class="aks-it"><input type="checkbox" data-g="${x.key}" ${chk ? 'checked' : ''}><span>${esc(x.ad)}${v.renk ? ' · ' + esc(v.renk) : ''}<br><button type="button" class="aks-cp" data-k="${esc(v.kod)}">⧉ ${esc(v.kod)}</button></span><span class="pr">${aksTL(v.fiyat)}${pr ? `<small>Premium ${aksTL(pr.fiyat)}</small>` : ''}</span></label>`; };
+    await aksPremYukle([...r.varyant.map(v => v.kod), ...ger.concat(oner, paketIc).flatMap(x => (x.varyant || []).map(v => v.kod))]);
+    const renkSec = x => (x.varyant || []).length > 1 ? `<select class="field aks-vsel" data-vk="${x.key}">${x.varyant.map(v => `<option value="${esc(v.kod)}" ${v.kod === vOf(x).kod ? 'selected' : ''}>${esc(v.renk || '—')} · ${esc(v.kod)} · ${aksTL(v.fiyat)}</option>`).join('')}</select>` : '';
+    const it = (x, chk) => { const v = vOf(x), pr = aks.prem.get(v.kod);
+      return `<label class="aks-it"><input type="checkbox" data-g="${x.key}" ${chk ? 'checked' : ''}><span>${esc(x.ad)}${v.renk ? ' · <b>' + esc(v.renk) + '</b>' : ''}<br>${renkSec(x)}<button type="button" class="aks-cp" data-k="${esc(v.kod)}">⧉ ${esc(v.kod)}</button></span><span class="pr">${aksTL(v.fiyat)}${pr ? `<small>Premium ${aksTL(pr.fiyat)}</small>` : ''}</span></label>`; };
     const v0 = r.varyant.find(x => x.kod === vSec) || {};
-    const secList = [{...r, _v: v0}].concat(ger.map(x => ({...x, _v: aksVarSec(x), _g: true})), oner.filter(x => secili.has(x.key)).map(x => ({...x, _v: aksVarSec(x)})));
-    const kilit = x => { const v = aksVarSec(x), pr = aks.prem.get(v.kod);
-      return `<div class="aks-it"><span title="Zorunlu">🔒</span><span>${esc(x.ad)}${v.renk ? ' · ' + esc(v.renk) : ''}<br><button type="button" class="aks-cp" data-k="${esc(v.kod)}">⧉ ${esc(v.kod)}</button></span><span class="pr">${aksTL(v.fiyat)}${pr ? `<small>Premium ${aksTL(pr.fiyat)}</small>` : ''}</span></div>`; };
+    const secList = [{...r, _v: v0}].concat(ger.map(x => ({...x, _v: vOf(x), _g: true})), oner.filter(x => secili.has(x.key)).map(x => ({...x, _v: vOf(x)})));
+    const kilit = x => { const v = vOf(x), pr = aks.prem.get(v.kod);
+      return `<div class="aks-it"><span title="Zorunlu">🔒</span><span>${esc(x.ad)}${v.renk ? ' · <b>' + esc(v.renk) + '</b>' : ''}<br>${renkSec(x)}<button type="button" class="aks-cp" data-k="${esc(v.kod)}">⧉ ${esc(v.kod)}</button></span><span class="pr">${aksTL(v.fiyat)}${pr ? `<small>Premium ${aksTL(pr.fiyat)}</small>` : ''}</span></div>`; };
     const topY = secList.reduce((t, x) => t + (x._v.fiyat || 0), 0), topP = secList.reduce((t, x) => t + ((aks.prem.get(x._v.kod) || {}).fiyat || 0), 0), eksikP = secList.filter(x => !aks.prem.get(x._v.kod)).length;
     sh.innerHTML = `<h3>${r.paket ? '<span class="aks-tag">PAKET</span>' : ''}${esc(r.ad)}</h3>
       <div class="hint">${esc(r.tur || '')}${r.kategori ? ' · ' + esc(r.kategori) : ''}${a ? ' · ' + esc(aksAracAd(a)) : ''}</div>
       ${r.resim ? `<img src="${esc(r.resim)}" alt="" style="max-width:160px;max-height:120px;display:block;margin:8px 0;background:#fff;border-radius:10px;">` : ''}
       ${aksYUrl(r.slug) ? `<div class="aks-links"><a class="aks-link" href="${esc(aksYUrl(r.slug))}" target="_blank" rel="noopener">↗ Yamaha sitesinde aç</a></div>` : ''}
-      <table class="aks-var">${r.varyant.map(v => { const pr = aks.prem.get(v.kod); return `<tr><td><input type="radio" name="aks-v" value="${esc(v.kod)}" ${v.kod === vSec ? 'checked' : ''}></td><td>${esc(v.renk || '—')}<br><button type="button" class="aks-cp" data-k="${esc(v.kod)}">⧉ ${esc(v.kod)}</button></td><td class="r">${aksTL(v.fiyat)}<br><span class="sub">${pr ? 'Premium ' + aksTL(pr.fiyat) : "Premium'da yok"}</span></td></tr>`; }).join('')}</table>
+      ${r.varyant.length > 1 ? `<div class="aks-sec">Renk seç (${r.varyant.length})${opt.renk ? ` <span class="sub">· motorun rengi: ${esc(opt.renk)}</span>` : ''}</div>` : ''}
+      <table class="aks-var">${r.varyant.map(v => { const pr = aks.prem.get(v.kod); return `<tr><td><input type="radio" name="aks-v" value="${esc(v.kod)}" ${v.kod === vSec ? 'checked' : ''}></td><td><b>${esc(v.renk || '—')}</b>${opt.renk && aksRenkSec([v], opt.renk) ? ' <span class="aks-tag" style="background:#2e9d5b;color:#fff;">motorun rengi</span>' : ''}<br><button type="button" class="aks-cp" data-k="${esc(v.kod)}">⧉ ${esc(v.kod)}</button></td><td class="r">${aksTL(v.fiyat)}<br><span class="sub">${pr ? 'Premium ' + aksTL(pr.fiyat) : "Premium'da yok"}</span></td></tr>`; }).join('')}</table>
       ${paketIc.length ? `<div class="aks-sec">Paket içeriği (${paketIc.length})</div>` + paketIc.map(x => { const v = aksVarSec(x); return `<div class="aks-it"><span></span><span>${esc(x.ad)}<br><span class="sub">${esc(v.kod)}</span></span><span class="pr">${aksTL(v.fiyat)}</span></div>`; }).join('') : ''}
       ${gerSorun === 'motor' ? `<div class="aks-zor">⛔ Bu ürün GEREKLİ parçalar olmadan monte edilemez ve gerekli parçalar motora göre değişir. <b>Önce motor seç.</b></div>`
         : gerSorun === 'eksik' ? `<div class="aks-zor">⛔ Bu ürünün ${G.eksik} GEREKLİ parçası henüz yüklenmedi; eksik setle montaj yapılamaz. Yükleme bitince tekrar dene.</div>` : ''}
@@ -4546,6 +4555,7 @@ async function aksYDetay(key, opt){
       <div class="sz-acts" style="margin-top:8px;"><button type="button" class="ht-btn" id="aks-dx">Kapat</button></div>`;
     sh.querySelectorAll('.aks-cp[data-k]').forEach(b => b.onclick = e => { e.preventDefault(); kdCopy(b.dataset.k); });
     sh.querySelectorAll('input[name=aks-v]').forEach(i => i.onchange = async () => { vSec = i.value; await paketGetir(); ciz(); });
+    sh.querySelectorAll('.aks-vsel').forEach(se => { se.onclick = e => e.stopPropagation(); se.onchange = () => { varSec.set(+se.dataset.vk, se.value); ciz(); }; });
     sh.querySelectorAll('[data-g]').forEach(c => c.onchange = () => { c.checked ? secili.add(+c.dataset.g) : secili.delete(+c.dataset.g); ciz(); });
     document.getElementById('aks-dx').onclick = closeSheet;
     const ms = document.getElementById('aks-msec'); if(ms) ms.onclick = () => opt.motorSec ? opt.motorSec() : aksAracSec();
@@ -4608,7 +4618,7 @@ async function aksSetFiyat(kalemler){
   const yKeys = kalemler.filter(k => k.s === 'yamaha').map(k => +k.id);
   const y = new Map((await aksYGetir(yKeys)).map(r => [String(r.key), r]));
   const kodlar = kalemler.filter(k => k.kod && k.s !== 'motoliz').map(k => k.kod);
-  await aksPremYukle(kodlar);
+  await aksPremYukle(kodlar.concat([...y.values()].flatMap(r => r.varyant.map(v => v.kod))));
   const m = new Map();
   for(const site of ['premium', 'motoliz']){
     const ids = kalemler.filter(k => k.s === site).map(k => k.id);
@@ -4617,12 +4627,15 @@ async function aksSetFiyat(kalemler){
   return kalemler.map(k => {
     let fy = null, fp = null, fm = null, _r = null;
     let _u = null, _up = null;
-    if(k.s === 'yamaha'){ const r = y.get(k.id); const v = r && (r.varyant.find(x => x.kod === k.kod) || aksVarSec(r)); fy = v ? v.fiyat : null; const pm = aks.prem.get(k.kod) || {}; fp = pm.fiyat ?? null; _r = r && r.resim; _u = aksYUrl(r && r.slug); _up = pm.url || null; }
+    let _vs = null;
+    if(k.s === 'yamaha'){ const r = y.get(k.id); const v = r && (r.varyant.find(x => x.kod === k.kod) || aksVarSec(r)); fy = v ? v.fiyat : null; const pm = aks.prem.get(k.kod) || {}; fp = pm.fiyat ?? null; _r = r && r.resim; _u = aksYUrl(r && r.slug); _up = pm.url || null; _vs = r && r.varyant.length > 1 ? r.varyant : null; }
     else if(k.s === 'premium'){ const pr = m.get('premium:' + k.id) || {}; fp = pr.fiyat ?? null; _r = pr.resim; _u = pr.url || null; }
     else{ const mr = m.get('motoliz:' + k.id) || {}; fm = mr.fiyat ?? null; _r = mr.resim; _u = mr.url || null; if(!k.kod && mr.kod) k = {...k, kod: mr.kod}; }   // Motoliz kodu olduğu gibi (tireler kodun parçası)
-    return {...k, fy, fp, fm, _r, _u, _up};
+    return {...k, fy, fp, fm, _r, _u, _up, _vs};
   });
 }
+const aksKartRenk = (k, i) => k._vs ? `<select class="field aks-vsel" data-ri="${i}" style="margin:6px 0 0;max-width:280px;">${k._vs.map(v => `<option value="${esc(v.kod)}" ${v.kod === k.kod ? 'selected' : ''}>${esc(v.renk || '—')} · ${esc(v.kod)} · ${aksTL(v.fiyat)}</option>`).join('')}</select>` : '';
+function aksKartRenkUygula(k, kod){ const v = (k._vs || []).find(x => x.kod === kod); if(!v) return; k.kod = v.kod; k.renk = v.renk || ''; k.fy = v.fiyat; const pm = aks.prem.get(v.kod) || {}; k.fp = pm.fiyat ?? null; k._up = pm.url || null; }
 const aksYUrl = slug => slug ? 'https://www.yamaha-motor.eu/tr/tr/accessories/accessories-overview/pdp/' + encodeURIComponent(slug) + '/' : null;
 const aksLinkler = k => (k._u ? `<a class="aks-link" href="${esc(k._u)}" target="_blank" rel="noopener">↗ ${k.s === 'yamaha' ? 'Yamaha' : AKS_SITE[k.s]}</a>` : '') + (k._up ? `<a class="aks-link" href="${esc(k._up)}" target="_blank" rel="noopener">↗ Premium</a>` : '');
 function aksToplam(f){
@@ -4665,7 +4678,7 @@ async function aksSetAc(id){
   let f = await aksSetFiyat(st.kalemler || []);
   const yetki = aksBenim(st);
   let kayT = null;
-  const kaydet = () => { clearTimeout(kayT); kayT = setTimeout(() => clRest('urun_set?id=eq.' + st.id, {method: 'PATCH', body: {ad: st.ad, kalemler: f.map(({fy, fp, fm, _r, _u, _up, ...k}) => k), updated_at: new Date().toISOString()}, prefer: 'return=minimal'}).then(() => { aks.setler = null; }).catch(e => showToast('Kaydedilemedi: ' + e.message, 3500)), 400); };
+  const kaydet = () => { clearTimeout(kayT); kayT = setTimeout(() => clRest('urun_set?id=eq.' + st.id, {method: 'PATCH', body: {ad: st.ad, kalemler: f.map(({fy, fp, fm, _r, _u, _up, _vs, ...k}) => k), updated_at: new Date().toISOString()}, prefer: 'return=minimal'}).then(() => { aks.setler = null; }).catch(e => showToast('Kaydedilemedi: ' + e.message, 3500)), 400); };
   const ciz = () => {
     const t = aksToplam(f), fk = lsGet('aks:wafiyat') || 'premium';
     sh.innerHTML = `<h3>${yetki ? `<input class="field" id="aks-sad" value="${esc(st.ad)}" style="font-weight:800;margin:0;">` : esc(st.ad)}</h3>
@@ -4677,6 +4690,7 @@ async function aksSetAc(id){
           <div class="n">${esc(k.ad)}</div>
           <div class="m"><span class="aks-site ${k.s}">${AKS_SITE[k.s]}</span>${k.renk ? `<span>${esc(k.renk)}</span>` : ''}${ana.length ? `<span class="aks-tag" style="background:#E5484D;color:#fff;">GEREKLİ · ${esc(ana.map(x => x.ad).join(', '))} için</span>` : ''}</div>
           ${k.kod ? `<button type="button" class="aks-kodbtn" data-k="${esc(k.kod)}"><span>${esc(k.kod)}</span><b>⧉ Kopyala</b></button>` : '<div class="sub">Stok kodu yok</div>'}
+          ${yetki ? aksKartRenk(k, i) : ''}
           ${aksLinkler(k) ? `<div class="aks-links">${aksLinkler(k)}</div>` : ''}
           <div class="ft"><span class="aks-q">${yetki ? `<button data-m="${i}" aria-label="Azalt">−</button>` : ''}<b>${k.adet || 1} adet</b>${yetki ? `<button data-p="${i}" aria-label="Artır">+</button>` : ''}</span>${yetki ? `<button type="button" class="aks-cp" data-x="${i}" style="margin:0;">Çıkar</button>` : ''}</div>
         </div>
@@ -4701,6 +4715,7 @@ async function aksSetAc(id){
     });
     document.getElementById('aks-wf').onchange = e => { lsSet('aks:wafiyat', e.target.value); };
     sh.querySelectorAll('.aks-kodbtn').forEach(b => b.onclick = () => { kdCopy(b.dataset.k); b.classList.add('ok'); setTimeout(() => b.classList.remove('ok'), 1200); });
+    sh.querySelectorAll('.aks-vsel[data-ri]').forEach(se => se.onchange = () => { aksKartRenkUygula(f[+se.dataset.ri], se.value); kaydet(); ciz(); });
     document.getElementById('aks-wa').onclick = () => kdCopy(aksWaMetni(st, f, document.getElementById('aks-wf').value));
     document.getElementById('aks-dx').onclick = () => { closeSheet(); if(aks.tab === 'set') aksSetler(); };
     const ue = document.getElementById('aks-ue'); if(ue) ue.onclick = () => { lsSet('aks:aktifset', st.id); closeSheet(); if(aks.tab === 'set'){ aks.tab = 'yamaha'; lsSet('aks:tab', 'yamaha'); } aksHeader(); aksRender(); showToast('Ürünü açıp "Sete ekle" de', 2200); };
@@ -4737,7 +4752,7 @@ document.getElementById('aks-more').addEventListener('click', () => { aks.lim +=
 const SP_KEY = 'bayi:sepet', SP_TAKSIT = [0, 1, 2, 3, 4, 6];   // 0 = nakit
 var sp = null, spF = null, spL = {tab: 'yamaha', q: '', kat: '', lim: 60, all: null, allKey: null, rows: [], seq: 0};
 function spYukle(){ if(!sp) sp = Object.assign({yok: true, arac: null, aracOto: '', items: [], genel: 0, taksit: 1}, cjson(SP_KEY, {})); return sp; }
-function spKaydet(){ localStorage.setItem(SP_KEY, JSON.stringify({...sp, items: sp.items.map(({fy, fp, fm, _r, _u, _up, ...k}) => k)})); }
+function spKaydet(){ localStorage.setItem(SP_KEY, JSON.stringify({...sp, items: sp.items.map(({fy, fp, fm, _r, _u, _up, _vs, ...k}) => k)})); }
 function spSifirla(){ sp = {yok: true, arac: null, aracOto: '', aracElle: false, items: [], genel: 0, taksit: 1}; spF = null; spKaydet(); }
 const spSayi = v => { const n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? Math.min(100, Math.max(0, n)) : 0; };
 const spFiyat = k => k.s === 'motoliz' ? k.fm : (k.fp != null ? k.fp : k.fy);   // Premium Shop fiyatı, yoksa Yamaha resmi
@@ -4811,6 +4826,7 @@ function spSepetCiz(){
         <div class="n">${esc(k.ad)}</div>
         <div class="m"><span class="aks-site ${k.s}">${AKS_SITE[k.s]}</span>${k.renk ? `<span>${esc(k.renk)}</span>` : ''}${ana.length ? `<span class="aks-tag" style="background:#E5484D;color:#fff;">GEREKLİ · ${esc(ana.map(x => x.ad).join(', '))} için</span>` : ''}</div>
         ${k.kod ? `<button type="button" class="aks-kodbtn" data-k="${esc(k.kod)}"><span>${esc(k.kod)}</span><b>⧉ Kopyala</b></button>` : '<div class="sub">Stok kodu yok</div>'}
+        ${aksKartRenk(k, i)}
         ${aksLinkler(k) ? `<div class="aks-links">${aksLinkler(k)}</div>` : ''}
         <div class="ft"><span class="aks-q"><button data-m="${i}" aria-label="Azalt">−</button><b>${n} adet</b><button data-p="${i}" aria-label="Artır">+</button></span>
           <label class="sp-isk">İskonto % <input class="field" inputmode="decimal" data-i="${i}" value="${k.isk || ''}" placeholder="0"></label>
@@ -4824,6 +4840,7 @@ function spSepetCiz(){
   box.querySelectorAll('input[data-i]').forEach(inp => inp.oninput = () => { const i = +inp.dataset.i, v = spSayi(inp.value); spF[i].isk = v; sp.items[i].isk = v; spKaydet();
     const k = spF[i], p = spFiyat(k); document.querySelector(`#sp-cart [data-net="${i}"]`).textContent = aksTL(p == null ? null : p * (k.adet || 1) * (1 - v / 100)); spOzetCiz(); });
   box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => spCikar(+b.dataset.x));
+  box.querySelectorAll('.aks-vsel[data-ri]').forEach(se => se.onchange = () => { const i = +se.dataset.ri, k = spF[i]; aksKartRenkUygula(k, se.value); Object.assign(sp.items[i], {kod: k.kod, renk: k.renk}); spKaydet(); spSepetCiz(); });
   spOzetCiz();
 }
 function spOzetCiz(){
@@ -4883,7 +4900,7 @@ async function spListe(){
           <div class="s">${esc(r.tur || '')}${r.gerekli.length ? ' · <b style="color:#E5484D;">GEREKLİ parça şart</b>' : ''}</div></div>
           <div class="p">${pr ? aksTL(pr.fiyat) + '<small>Premium</small>' : ''}${aksTL(v.fiyat)}<small>Yamaha</small><button type="button" class="aks-cp" style="margin-top:4px;">+ Sepete</button></div></div>`; }).join('') || '<div class="empty-state">Ürün bulunamadı.</div>';
       more.classList.toggle('hidden', rows.length <= spL.lim);
-      box.querySelectorAll('.aks-row[data-y]').forEach(row => row.onclick = () => aksYDetay(+row.dataset.y, {arac: a, ekle: spEkle, motorSec: spAracSec}));
+      box.querySelectorAll('.aks-row[data-y]').forEach(row => row.onclick = () => aksYDetay(+row.dataset.y, {arac: a, ekle: spEkle, motorSec: spAracSec, renk: (typeof sz !== 'undefined' && sz && sz.f && sz.f.renk) || (typeof ys !== 'undefined' && ys && ys.renk) || ''}));
     }else{
       const site = spL.tab, mw = a ? (a.tur === 'scooters' || !/\d/.test(aksN(a.ad).split(' ')[1] || '') ? [aksN(a.ad).split(' ')[0]] : aksN(a.ad).split(' ').slice(0, 2)) : [];
       const w = aksN(spL.q).split(' ').filter(Boolean), words = w.length ? w : mw;
@@ -4930,7 +4947,7 @@ document.getElementById('sp-setkaydet').addEventListener('click', () => {
   document.getElementById('sp-sx').onclick = closeSheet;
   document.getElementById('sp-sok').onclick = async () => {
     const ad = document.getElementById('sp-sad').value.trim(); if(!ad){ showToast('Set adı yaz', 1600); return; }
-    try{ await clRest('urun_set', {method: 'POST', body: {ad, arac: a ? aksAracAd(a) : null, arac_key: a ? a.key : null, kalemler: sp.items.map(({isk, fy, fp, fm, _r, _u, _up, ...k}) => k), olusturan_ad: clName()}, prefer: 'return=minimal'}); aks.setler = null; closeSheet(); showToast('Set kaydedildi: ' + ad, 2200); }
+    try{ await clRest('urun_set', {method: 'POST', body: {ad, arac: a ? aksAracAd(a) : null, arac_key: a ? a.key : null, kalemler: sp.items.map(({isk, fy, fp, fm, _r, _u, _up, _vs, ...k}) => k), olusturan_ad: clName()}, prefer: 'return=minimal'}); aks.setler = null; closeSheet(); showToast('Set kaydedildi: ' + ad, 2200); }
     catch(er){ showToast('Kaydedilemedi: ' + er.message, 3500); }
   };
 });

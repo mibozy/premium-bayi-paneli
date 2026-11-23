@@ -760,6 +760,7 @@
     <div class="chips aks-tabs" id="aks-tabs">
       <button type="button" class="chip" data-t="yamaha">Yamaha Resmi</button>
       <button type="button" class="chip" data-t="premium">Premium Shop</button>
+      <button type="button" class="chip" data-t="indirim">% İndirimli</button>
       <button type="button" class="chip" data-t="motoliz">Motoliz</button>
       <button type="button" class="chip" data-t="set">Setler</button>
     </div>
@@ -889,7 +890,7 @@
       <div id="sp-sum"></div>
       <div class="sz-acts"><button type="button" class="ht-btn" id="sp-wa">WhatsApp mesajı</button><button type="button" class="ht-btn" id="sp-setkaydet">Set olarak kaydet</button><button type="button" class="ht-btn" id="sp-setten">Setten aktar</button><button type="button" class="ht-btn warn" id="sp-bosalt">Sepeti boşalt</button></div>
       <div class="section-title" style="margin-top:18px;"><div class="stripe-dash"></div>Ürün ekle</div>
-      <div class="chips aks-tabs" id="sp-tabs"><button type="button" class="chip" data-t="yamaha">Yamaha (uyumlu)</button><button type="button" class="chip" data-t="premium">Premium Shop</button><button type="button" class="chip" data-t="motoliz">Motoliz</button></div>
+      <div class="chips aks-tabs" id="sp-tabs"><button type="button" class="chip" data-t="yamaha">Yamaha (uyumlu)</button><button type="button" class="chip" data-t="premium">Premium Shop</button><button type="button" class="chip" data-t="indirim">% İndirimli</button><button type="button" class="chip" data-t="motoliz">Motoliz</button></div>
       <div class="aks-bar" id="sp-bar"><input class="field" id="sp-q" type="search" placeholder="Ürün adı veya stok kodu ara" autocomplete="off"><select class="field" id="sp-kat"></select></div>
       <div class="sub" id="sp-info" style="margin:6px 0 10px;"></div>
       <div id="sp-list"></div>
@@ -4480,16 +4481,17 @@ async function aksPremYukle(kodlar){
   }
 }
 async function aksMagazaListe(seq, site){
-  const a = aksArac(), modelFiltre = a && lsGet('aks:modelsuz') !== '1';
+  const indTab = site === 'indirim'; if(indTab) site = 'premium';   // Premium Shop "İndirimli" bölümü: indirimdeki tüm ürünler, en yüksek indirim üstte
+  const a = indTab ? null : aksArac(), modelFiltre = a && lsGet('aks:modelsuz') !== '1';
   const mw = modelFiltre ? (a.tur === 'scooters' || !/\d/.test(aksN(a.ad).split(' ')[1] || '') ? [aksN(a.ad).split(' ')[0]] : aksN(a.ad).split(' ').slice(0, 2)) : [];
   const words = aksN(aks.q).split(' ').filter(Boolean).concat(mw);
   let u = `urunler?select=site,id,ad,url,kategori,fiyat,eski_fiyat,resim,kod,indirim&aktif=is.true&site=eq.${site}`;
   if(words.length) u += `&and=(${words.map(w => `ara.ilike.*${encodeURIComponent(w)}*`).join(',')})`;
-  u += `&order=ad.asc&limit=${aks.lim + 1}`;
+  u += indTab ? `&indirim=gt.0&order=indirim.desc,ad.asc&limit=${aks.lim + 1}` : `&order=ad.asc&limit=${aks.lim + 1}`;
   const rows = await clRest(u);
   if(seq !== aks.seq) return;
   aks.rows = rows.slice(0, aks.lim);
-  aksInfo(`${rows.length > aks.lim ? aks.lim + '+' : rows.length} ürün` + (a ? ` · <button type="button" class="aks-cp" id="aks-mf">${modelFiltre ? '✓ Sadece adında "' + esc(mw.join(' ').toUpperCase()) + '" geçenler' : 'Motor adına göre süz: kapalı'}</button>` : ''));
+  aksInfo(`${rows.length > aks.lim ? aks.lim + '+' : rows.length} ${indTab ? 'indirimli Premium Shop ürünü · en yüksek indirim üstte' : 'ürün'}` + (a ? ` · <button type="button" class="aks-cp" id="aks-mf">${modelFiltre ? '✓ Sadece adında "' + esc(mw.join(' ').toUpperCase()) + '" geçenler' : 'Motor adına göre süz: kapalı'}</button>` : ''));
   const mf = document.getElementById('aks-mf'); if(mf) mf.onclick = () => { lsSet('aks:modelsuz', modelFiltre ? '1' : '0'); aksRender(); };
   aksEl('list').innerHTML = aks.rows.map(x => { const ind = x.eski_fiyat > x.fiyat;
     return `<div class="aks-row" data-m="${esc(x.id)}">${x.resim ? `<img loading="lazy" src="${esc(x.resim)}" alt="" onerror="this.style.visibility='hidden'">` : ''}<div class="t"><div class="n">${esc(x.ad)}</div>
@@ -4922,15 +4924,15 @@ async function spListe(){
       more.classList.toggle('hidden', rows.length <= spL.lim);
       box.querySelectorAll('.aks-row[data-y]').forEach(row => row.onclick = () => aksYDetay(+row.dataset.y, {arac: a, ekle: spEkle, motorSec: spAracSec, renk: (typeof sz !== 'undefined' && sz && sz.f && sz.f.renk) || (typeof ys !== 'undefined' && ys && ys.renk) || ''}));
     }else{
-      const site = spL.tab, mw = a ? (a.tur === 'scooters' || !/\d/.test(aksN(a.ad).split(' ')[1] || '') ? [aksN(a.ad).split(' ')[0]] : aksN(a.ad).split(' ').slice(0, 2)) : [];
+      const indTab = spL.tab === 'indirim', site = indTab ? 'premium' : spL.tab, mw = a && !indTab ? (a.tur === 'scooters' || !/\d/.test(aksN(a.ad).split(' ')[1] || '') ? [aksN(a.ad).split(' ')[0]] : aksN(a.ad).split(' ').slice(0, 2)) : [];
       const w = aksN(spL.q).split(' ').filter(Boolean), words = w.length ? w : mw;
       let u = `urunler?select=site,id,ad,url,kategori,fiyat,eski_fiyat,resim,kod,indirim&aktif=is.true&site=eq.${site}`;
       if(words.length) u += `&and=(${words.map(x => `ara.ilike.*${encodeURIComponent(x)}*`).join(',')})`;
-      const rows = await clRest(u + `&order=fiyat.asc.nullslast&limit=${spL.lim + 1}`);
+      const rows = await clRest(u + (indTab ? `&indirim=gt.0&order=indirim.desc,fiyat.asc` : `&order=fiyat.asc.nullslast`) + `&limit=${spL.lim + 1}`);
       if(seq !== spL.seq) return;
       spL.rows = rows.slice(0, spL.lim);
-      info.textContent = `${rows.length > spL.lim ? spL.lim + '+' : rows.length} ürün${!w.length && mw.length ? ' · adında "' + mw.join(' ').toUpperCase() + '" geçenler' : ''} · fiyata göre sıralı`;
-      box.innerHTML = spL.rows.map(x => `<div class="aks-row" data-m="${esc(x.id)}">${x.resim ? `<img loading="lazy" src="${esc(x.resim)}" alt="" onerror="this.style.visibility='hidden'">` : ''}<div class="t"><div class="n">${esc(x.ad)}</div><div class="s">${esc(x.kategori || '')}${x.kod ? ' · ' + esc(x.kod) : ''}</div></div>
+      info.textContent = `${rows.length > spL.lim ? spL.lim + '+' : rows.length} ürün${!w.length && mw.length ? ' · adında "' + mw.join(' ').toUpperCase() + '" geçenler' : ''} · ${indTab ? 'indirimli · en yüksek indirim üstte' : 'fiyata göre sıralı'}`;
+      box.innerHTML = spL.rows.map(x => `<div class="aks-row" data-m="${esc(x.id)}">${x.resim ? `<img loading="lazy" src="${esc(x.resim)}" alt="" onerror="this.style.visibility='hidden'">` : ''}<div class="t"><div class="n">${esc(x.ad)}</div><div class="s">${esc(x.kategori || '')}${x.kod ? ' · ' + esc(x.kod) : ''}${x.eski_fiyat > x.fiyat ? ` · <b style="color:#2e9d5b;">%${x.indirim || ''} indirim</b>` : ''}</div></div>
         <div class="p">${x.eski_fiyat > x.fiyat ? `<small><s>${aksTL(x.eski_fiyat)}</s></small>` : ''}${aksTL(x.fiyat)}<button type="button" class="aks-cp" style="margin-top:4px;">+ Sepete</button></div></div>`).join('') || '<div class="empty-state">Ürün bulunamadı.</div>';
       more.classList.toggle('hidden', rows.length <= spL.lim);
       box.querySelectorAll('.aks-row[data-m]').forEach(row => row.onclick = () => { const x = spL.rows.find(r => r.id === row.dataset.m); if(x) spEkle([{s: x.site, id: String(x.id), kod: x.kod || '', ad: x.ad, adet: 1}]); });

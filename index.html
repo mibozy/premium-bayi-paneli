@@ -362,7 +362,7 @@
   .ku-h{font-size:12px;font-weight:800;color:var(--steel-dim);letter-spacing:.5px;margin:14px 0 8px;text-transform:uppercase;}
   .tile.slate{--c:#7C8DA6;}
   .by{font-size:11.5px;color:var(--steel-dim);font-weight:600;white-space:nowrap;}
-  body.ro #km-import,body.ro #km-chips .chip[data-k="imp"],body.ro #tk-add{display:none !important;}
+  body.ro #km-import,body.ro #km-chips .chip[data-k="imp"],body.ro #km-chips .chip[data-k="duz"],body.ro #tk-add{display:none !important;}
   /* ================= SATIŞ SÖZLEŞMESİ ================= */
   .tile.sky{--c:#4FB3E8;}
   .sz-drop{border:2px dashed var(--bd2);border-radius:16px;padding:22px 14px;text-align:center;cursor:pointer;outline:none;transition:border-color .2s,background .2s;}
@@ -469,6 +469,8 @@
   .km-table th,.km-table td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:left;}
   .km-table th{background:var(--th);font-size:11.5px;color:var(--steel);cursor:pointer;}
   .km-table td:first-child,.km-table th:first-child{position:sticky;left:0;background:var(--sticky);font-weight:800;}
+  .km-table td.km-ed{padding:4px;} .km-in{width:100%;min-width:110px;box-sizing:border-box;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:inherit;font:inherit;font-size:13px;}
+  .km-table td.km-ed:first-child .km-in{min-width:150px;font-weight:800;} .km-in.ok{border-color:#2e9d5b;}
   .km-table td.ch{color:#F0627A;font-weight:800;}
   .km-table tbody tr{cursor:pointer;}
   body.desktop .km-cells{grid-template-columns:repeat(4,1fr);}
@@ -2620,7 +2622,7 @@ function initUI(){
    Başlığı olmayan yan hücreler "Notlar" kutusuna gider, tablo verisiyle karıştırılmaz.
    ============================================================ */
 const KM_VER = 2;
-let km = null, kmMode = 'liste', kmOnly = false, kmImport = false, kmNotesOpen = false, kmSort = {b:-1, c:0, d:1};
+let km = null, kmMode = 'liste', kmOnly = false, kmImport = false, kmEdit = false, kmNotesOpen = false, kmSort = {b:-1, c:0, d:1};
 const kmKey = (b, r, ci) => b.title + '|' + (r[0] || '') + '|' + (b.cols[ci] || ci);
 const kmIsNum = c => /^[\d.,\s]+(₺|tl|%)?$/i.test(String(c).replace(/^₺\s*/, ''));
 function kmNum(t){
@@ -2762,17 +2764,22 @@ function kmPlan(b, r){
     return i;
   };
   const get = i => i >= 0 ? (r[i] || '') : '';
-  const liste = kmNum(get(idx('perakende'))), nakit = kmNum(get(idx('pesinfiyat'))), pesinat = kmNum(get(idx('pesinat')));
-  const tak = String(get(idx('taksitimkan', /2$|maliyet/))), tl = tak.toLocaleLowerCase('tr');
-  const whole = /tamam/.test(tl) ? tl.match(/(\d+)\s*taksit/) : null, part = tak.match(/([\d.,]+)\s*\/\s*(\d+)/);
-  let plan = '';
-  if(whole){ const n = +whole[1]; plan = `Tamamına ${n} taksit: Aylık ${kmFmt(liste / n)} TL`; }
-  else if(part){ const amount = kmNum(part[1]), n = +part[2]; plan = `${kmFmt(isNaN(pesinat) ? liste - amount : pesinat)} TL peşinat + ${kmFmt(amount)} TL tutarında ${n} taksit: Aylık ${kmFmt(amount / n)} TL`; }
-  const L = ['Merhaba,', '', `${full} modelimiz için ödeme planlarımız aşağıdadır.`, '', '1) Havale ile nakit ödeme',
+  const liste = kmNum(get(idx('perakende'))), nakit = kmNum(get(idx('pesinfiyat')));
+  // her "Taksit imkanı" sütunu bir plan (1., 2. …); "Taksit maliyeti" müşteriye gösterilmez. Peşinat sütunu varsa sırayla eşleşir, yoksa liste − taksitli tutar
+  const sut = k => b.cols.map((h, i) => [kmNz(h), i]).filter(([h]) => h.includes(k) && !/maliyet/.test(h)).map(x => x[1]);
+  const takS = sut('taksitimkan'), pesS = sut('pesinat');
+  const plans = takS.map((ci, k) => {
+    const tak = String(get(ci)), tl = tak.toLocaleLowerCase('tr'), pesinat = k < pesS.length ? kmNum(get(pesS[k])) : NaN;
+    const whole = /tamam/.test(tl) ? tl.match(/(\d+)\s*taksit/) : null, part = tak.match(/([\d.,]+)\s*\/\s*(\d+)/);
+    if(whole){ const n = +whole[1]; return `Tamamına ${n} taksit: Aylık ${kmFmt(liste / n)} TL`; }
+    if(part){ const amount = kmNum(part[1]), n = +part[2]; return `${kmFmt(isNaN(pesinat) ? liste - amount : pesinat)} TL peşinat + ${kmFmt(amount)} TL tutarında ${n} taksit: Aylık ${kmFmt(amount / n)} TL`; }
+    return '';
+  }).filter(Boolean);
+  const L = [`*${full} modelimiz için ödeme planlarımız aşağıdadır.*`, '', '1) Havale ile nakit ödeme',
     `Nakit peşin fiyatımız ${kmFmt(nakit)} TL’dir. Bu fiyat yalnızca ve yalnızca havale ile yapılan ödemelerde geçerlidir.`, '', '2) Kredi kartı ile ödeme',
     `Kredi kartı ile ödemede liste fiyatımız olan ${kmFmt(liste)} TL geçerlidir.`, ''];
-  if(plan) L.push(plan, '');
-  L.push('Kredi kartı taksit bilgilerimiz Yapı Kredi kartı baz alınarak hazırlanmış örnek verilerdir. Farklı bir banka kartı kullanmanız halinde taksit tutarları değişiklik gösterebilir.');
+  plans.forEach(x => L.push(x, ''));
+  L.push('Kredi kartı taksit bilgilerimiz Yapı Kredi kartı baz alınarak hazırlanmış örnek verilerdir.');
   return {name, text: L.join('\n')};
 }
 function kmPlanSheet(bi, ri){
@@ -2795,17 +2802,18 @@ function kmRender(){
   if(!has) return;
   const chSet = new Set(km.changed || []), d = new Date(km.t);
   document.getElementById('km-info').textContent = 'Son güncelleme: ' + fmtLabel(d).main + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0')
-    + ' · ' + kmCount() + ' model' + (chSet.size ? ' · ' + chSet.size + ' değişiklik' : '');
+    + ' · ' + kmCount() + ' model' + (chSet.size ? ' · ' + chSet.size + ' değişiklik' : '') + (km.te ? ' · elle düzeltme: ' + new Date(km.te).toLocaleString('tr-TR', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'}) : '');
   const nb = document.getElementById('km-notes'), notes = km.notes || [];
   nb.classList.toggle('hidden', !notes.length);
   nb.innerHTML = notes.length ? `<div class="section-title km-ntog" style="cursor:pointer;margin-bottom:${kmNotesOpen ? '' : '0'};"><div class="stripe-dash"></div>Notlar (${notes.length})<span style="margin-left:auto;">${kmNotesOpen ? '▲ Kapat' : '▼ Aç'}</span></div>` + (kmNotesOpen ? notes.map(n => `<div class="km-note">${esc(n)}</div>`).join('') : '') : '';
   const nt = nb.querySelector('.km-ntog'); if(nt) nt.addEventListener('click', () => { kmNotesOpen = !kmNotesOpen; kmRender(); });
-  const chips = [['liste', 'Liste'], ['tablo', 'Tablo'], ['chg', 'Değişenler' + (chSet.size ? ' (' + chSet.size + ')' : '')], ['imp', 'Yeni veri yapıştır']];
+  const chips = [['liste', 'Liste'], ['tablo', 'Tablo'], ['chg', 'Değişenler' + (chSet.size ? ' (' + chSet.size + ')' : '')], ['duz', '✎ Düzenle'], ['imp', 'Yeni veri yapıştır']];
   const cbox = document.getElementById('km-chips');
-  cbox.innerHTML = chips.map(([k, l]) => `<div class="chip ${k === (kmImport ? 'imp' : kmOnly ? 'chg' : kmMode) ? 'sel' : ''}" data-k="${k}">${l}</div>`).join('');
+  if(document.body.classList.contains('ro')) kmEdit = false;
+  cbox.innerHTML = chips.map(([k, l]) => `<div class="chip ${k === (kmImport ? 'imp' : kmEdit ? 'duz' : kmOnly ? 'chg' : kmMode) ? 'sel' : ''}" data-k="${k}">${l}</div>`).join('');
   cbox.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
     const k = c.dataset.k;
-    kmOnly = k === 'chg'; kmImport = k === 'imp';
+    kmOnly = k === 'chg'; kmImport = k === 'imp'; kmEdit = k === 'duz';
     if(k === 'liste' || k === 'tablo') kmMode = k;
     kmRender();
     if(kmImport){ window.scrollTo({top: 0, behavior: 'smooth'}); const v = document.getElementById('km-import').closest('.view'); if(v) v.scrollTop = 0; }
@@ -2821,7 +2829,10 @@ function kmRender(){
       list.sort((x, y) => { const a = kmNum(x.r[c] || ''), z = kmNum(y.r[c] || ''); return (!isNaN(a) && !isNaN(z) ? a - z : String(x.r[c] || '').localeCompare(String(y.r[c] || ''), 'tr')) * dir; });
     }
     if(b.title) html += `<div class="section-header">${esc(b.title).toLocaleUpperCase('tr')}</div>`;
-    if(kmMode === 'liste'){
+    if(kmEdit){
+      html += `<div class="km-scroll"><table class="km-table"><thead><tr>` + b.cols.map(c => `<th>${esc(c)}</th>`).join('') + `</tr></thead><tbody>`
+        + list.map(({r, ri}) => `<tr>` + b.cols.map((_, ci) => `<td class="km-ed"><input class="km-in" data-b="${bi}" data-r="${ri}" data-c="${ci}" value="${esc(r[ci] || '')}"></td>`).join('') + '</tr>').join('') + '</tbody></table></div>';
+    } else if(kmMode === 'liste'){
       html += list.map(({r, ri}) => {
         const anyCh = r.some((c, ci) => chSet.has(kmKey(b, r, ci)));
         return `<div class="km-card" data-b="${bi}" data-r="${ri}"><div class="km-top"><div class="km-model">${esc(r[0] || '')}</div>${anyCh ? '<span class="km-badge">Güncellendi</span>' : ''}</div><div class="km-cells">`
@@ -2833,13 +2844,25 @@ function kmRender(){
     }
   });
   const box = document.getElementById('km-content');
-  box.innerHTML = html || '<div class="empty-state">Eşleşen model yok.</div>';
+  box.innerHTML = (kmEdit ? '<div class="sub" style="margin-bottom:8px;">Hücreye dokun, değiştir. Kutudan çıkınca kaydedilir ve herkeste güncellenir; mesajlar yeni değerlerle oluşur.</div>' : '') + (html || '<div class="empty-state">Eşleşen model yok.</div>');
+  box.querySelectorAll('.km-in').forEach(inp => inp.addEventListener('change', () => kmHucre(+inp.dataset.b, +inp.dataset.r, +inp.dataset.c, inp)));
   box.querySelectorAll('.km-card').forEach(el => el.addEventListener('click', () => kmPlanSheet(+el.dataset.b, +el.dataset.r)));
   box.querySelectorAll('.km-table td.km-first').forEach(td => td.addEventListener('click', () => { const tr = td.parentElement; kmPlanSheet(+tr.dataset.b, +tr.dataset.r); }));
   box.querySelectorAll('.km-table th').forEach(th => th.addEventListener('click', () => {
     const b = +th.dataset.b, c = +th.dataset.c;
     kmSort = kmSort.b === b && kmSort.c === c ? {b, c, d: -kmSort.d} : {b, c, d: 1}; kmRender();
   }));
+}
+// tablo hücresini elle düzelt: herkese senkronlanır (bayi:kampanya ortak), "Değişenler"de görünür
+function kmHucre(bi, ri, ci, inp){
+  kmLoad(); const b = km.blocks[bi]; if(!b || !b.rows[ri]) return;
+  const v = inp.value.trim().replace(/\s+/g, ' '), r = b.rows[ri];
+  if((r[ci] || '') === v) return;
+  if(ci === 0 && !v){ inp.value = r[0]; showToast('Model adı boş olamaz'); return; }
+  r[ci] = v; km.map = kmMap(km.blocks);
+  const k = kmKey(b, r, ci); km.changed = [...new Set((km.changed || []).concat(ci > 0 ? [k] : []))].filter(x => x in km.map);
+  delete km.raw; km.te = new Date().toISOString();   // elle düzeltilmiş tablo: eski yapıştırma metninden yeniden okunmaz
+  kmSave(); inp.classList.add('ok'); showToast('Kaydedildi · herkeste güncellenir', 1600);
 }
 document.getElementById('km-search').addEventListener('input', kmRender);
 document.getElementById('km-importBtn').addEventListener('click', () => {
